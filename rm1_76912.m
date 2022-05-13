@@ -35,27 +35,44 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     
     %% Step 1: Compute all path points
     velocity = 5; %TODO where to get this from?
-    plotBeacons(BeaconDetection(N)) 
+    beacons = BeaconDetection(N);
 
-    % Get path coordinates
-    curr_pose = INITIAL_POSE;
-    B = BeaconDetection(N, curr_pose);
-    n_points = [];
-
+    % Get all known points
+    known_poses = INITIAL_POSE;
     for n=1:1:N
-        % Get beacon n position
-        beacon_pose = [B(n).X, B(n).Y, B(n).a];
+        beacon = [beacons(n).X, beacons(n).Y, beacons(n).a];
+        known_poses = [known_poses; beacon];
+    end
 
-        % Compute distance to current pose
-        d = norm(beacon_pose(1:2) - curr_pose(1:2));
+    % Get intermediate points per section
+    all_poses = INITIAL_POSE;
+    for n=1:1:N
+        % Compute distance between two points
+        p0 = known_poses(n,:);
+        p1 = known_poses(n+1,:);
+        d = norm(p1-p0);
         
-        % Store n interval points
-        n_points = [n_points, round(d / (velocity * Dt))];
+        % Get n points
+        n_points = round(d / (velocity * Dt));
 
-        % Update current pose
-        curr_pose = beacon_pose;
+        deltas = (1:1:n_points)/n_points;
+        step_poses = p0+deltas'*(p1-p0);
+        all_poses = [all_poses; step_poses];
     end
 
+    % Get smooth path
+    yq = pchip(known_poses(:,1), known_poses(:,2), all_poses(:,1));
+    smooth_path = [all_poses(:,1), yq];
+
+    %%% DEGUB %%%
+    figure
+    plot(known_poses(:,1), known_poses(:,2),'bo')
+    hold on
+    plot(known_poses(:,1), known_poses(:,2),'r--')
+    hold on
+    plot(smooth_path(:,1),smooth_path(:,2),'g-')
+    grid on
+    %%%%%%%%%%%%%
 
 
 
@@ -63,27 +80,4 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
 
 
 
-
-
-
-end
-
-%% Aux Functions
-function plotBeacons(B)
-    xx = [];
-    yy = [];
-
-    for n=1:1:size(B,2)
-        xx = [xx, B(n).X];
-        yy = [yy, B(n).Y];
-    end
-
-    plot(xx,yy,'bo');
-    hold on;
-
-    xx = [0, xx];
-    yy = [0, yy];
-
-    plot(xx,yy,'r--');
-    grid on;
 end
