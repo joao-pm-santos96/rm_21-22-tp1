@@ -32,6 +32,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     DD_FILE = 'dd_76912.txt';
     TRI_FILE = 'tri_76912.txt';
     OMNI_FILE = 'omni_76912.txt';
+    DEBUG = true;
     
     %% Step 1: Compute all path points
     velocity = 5; %TODO where to get this from?
@@ -77,16 +78,45 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     smooth_path(:,3) = orients;
     
     %%% DEGUB %%%
-    figure
-    plot(known_poses(:,1), known_poses(:,2),'bo')
-    hold on
-    plot(known_poses(:,1), known_poses(:,2),'r--')
-    hold on
-    plot(smooth_path(:,1),smooth_path(:,2),'g-')
-    grid on
+    if (DEBUG)
+        figure
+        plot(known_poses(:,1), known_poses(:,2),'bo')
+        hold on
+        plot(known_poses(:,1), known_poses(:,2),'r--')
+        hold on
+        plot(smooth_path(:,1),smooth_path(:,2),'g-')
+        grid on
+        title('Path')
+    end
     %%%%%%%%%%%%%
 
-    %% Step 2: 
+    %% Step 2: Compute velocities
+    velocities = []; % TODO check if they make sense...
+    for n=1:1:size(smooth_path,1)-1
+        p0 = smooth_path(n,:);
+        p1 = smooth_path(n+1,:);
+        v = p1 - p0;
+        lin_vel = norm(v(1:2)) / Dt;
+        ang_vel = v(3) / Dt;
+        velocities = [velocities; [lin_vel, ang_vel]];
+    end
+    % TODO check if should stop at end and how/what to do it
+    velocities(end+1,:) = [0, 0];
+
+    %%% DEBUG %%%
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1), velocities(:,1), 'b-')
+        grid on
+        title('Linear Velocity')
+    
+        figure
+        plot(smooth_path(:,1), velocities(:,2), 'b-')
+        grid on
+        title('Angular Velocity')
+    end
+    %%%%%%%%%%%%%
+    
 
 
 
