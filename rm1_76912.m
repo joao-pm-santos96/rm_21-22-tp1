@@ -60,10 +60,22 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         all_poses = [all_poses; step_poses];
     end
 
-    % Get smooth path
+    % Get smooth path coordinates
     yq = pchip(known_poses(:,1), known_poses(:,2), all_poses(:,1));
     smooth_path = [all_poses(:,1), yq];
 
+    % Get smooth path orientations
+    orients = [];
+    for n=1:1:size(smooth_path,1)-1
+        p0 = smooth_path(n,:);
+        p1 = smooth_path(n+1,:);
+        v = p1 - p0;
+        orients = [orients; atan2(v(2),v(1))];
+    end
+    orients(end+1)=orients(end); % Keep one-to-last until end
+
+    smooth_path(:,3) = orients;
+    
     %%% DEGUB %%%
     figure
     plot(known_poses(:,1), known_poses(:,2),'bo')
@@ -74,9 +86,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     grid on
     %%%%%%%%%%%%%
 
-
-
-
+    %% Step 2: 
 
 
 
