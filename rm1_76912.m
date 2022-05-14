@@ -106,16 +106,19 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %%% DEBUG %%%
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), velocities(:,1), 'b-')
+        plot(smooth_path(:,1), velocities(:,1), 'bo')
         grid on
         title('Linear Velocity')
     
         figure
-        plot(smooth_path(:,1), velocities(:,2), 'b-')
+        plot(smooth_path(:,1), velocities(:,2), 'bo')
         grid on
         title('Angular Velocity')
     end
     %%%%%%%%%%%%%
+
+    %% Step 3: Extended Kalamn Filter
+    
     
 
 
