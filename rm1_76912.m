@@ -131,8 +131,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         0 Wn^2];
 
     % Get all beacon positions
-    ekf_loc = [INITIAL_POSE];
-    ekf_p  = [P_t];
+    ekf_loc = INITIAL_POSE;
+    ekf_p  = P_t;
 
     for n=2:1:size(control_inputs,1)
 
@@ -169,6 +169,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
         hold on
         plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
+        %TODO draw uncertainty ellipsis
     end
    
 
