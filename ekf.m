@@ -1,7 +1,7 @@
 function [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, delta_t, Q, R)
     % state: pose of robot: [x ,y, alpha]
     % P_t:
-    % control_t:
+    % control_t: control input at time t [lin_v, ang_v]
     % obs_t1: measured distance and angle to landmarks Nx2: [dist, angl]
     % landmakrs: landmarks positions Nx2: [x, y]
     % delta_t: time interval
@@ -35,7 +35,6 @@ function [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, delt
     z_all = reshape(obs_t1',[],1);
     z_pred = [];
 
-    % TODO check that the order is always maintained
     % TODO watch out for NANs...
     % TODO check if wrap is working properlly...
     sigma_2 = [0,0]; %TODO shouldn't be...
@@ -52,7 +51,6 @@ function [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, delt
     end
     
     S = Jh * P_t1_temp * Jh' + R;
-    % K = P_t1_temp * Jh' * inv(S);
     K = P_t1_temp * Jh' / S;
 
     %% Result

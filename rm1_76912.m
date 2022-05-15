@@ -131,36 +131,48 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         0 Wn^2];
 
     % Get all beacon positions
+    ekf_loc = [INITIAL_POSE];
+    ekf_p  = [P_t];
+
     for n=2:1:size(control_inputs,1)
 
         state_t = smooth_path(n-1,:);
-        
-        %P_t = 
-
         control_t = control_inputs(n-1,:);
-
         beacons = BeaconDetection(N, smooth_path(n,:));
-
-        % TODO check and deal with Nans
         obs_t1 = [beacons(:).d; beacons(:).a]';
-
         landmarks = beacon_poses(:,1:2);
-        delta_t = Dt;
 
-        % Q =
+        % Deal woth NaNs
+        [rows, ~] = find(isnan(obs_t1));
+        nan_rows = unique(rows);
+        b_noises = [beacons(:).dn; beacons(:).an];
 
-        a1 = [beacons(:).dn; beacons(:).an];
-        a2 = reshape(a1,1,[]);
-        R = diag(a2);
+        obs_t1(nan_rows,:) = [];
+        landmarks(nan_rows,:) = [];
+        b_noises(:,nan_rows) = [];
 
-        [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, delta_t, Q, R);
+        b_noises = reshape(b_noises,1,[]);
+        
+        R = diag(b_noises);
+
+        [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R);
 
         state_t = state_t1;
         P_t = P_t1;
-        
+
+        ekf_loc = [ekf_loc; state_t];
+        ekf_p = [ekf_p; P_t];
     end
 
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1),smooth_path(:,2),'g-')
+        hold on
+        plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
+    end
+   
 
+    %% Step
 
 
 
