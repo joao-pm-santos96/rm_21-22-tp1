@@ -3,7 +3,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %% Default Inputs
     if nargin < 6
         % incerteza (sigma) na velocidade angular a impor ao robot
-        Wn = 0.1; %m/s
+        Wn = 0.1; %rad/s
     end
     if nargin < 5
         % incerteza (sigma) na velocidade linear a impor ao robot
@@ -33,17 +33,21 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     TRI_FILE = 'tri_76912.txt';
     OMNI_FILE = 'omni_76912.txt';
     DEBUG = true;
+
+    if (DEBUG)
+        close all
+    end
     
     %% Step 1: Compute all path points
     velocity = 5; %TODO where to get this from?
     beacons = BeaconDetection(N);
 
     % Get all known points
-    known_poses = INITIAL_POSE;
+    beacon_poses = [];
     for n=1:1:N
-        beacon = [beacons(n).X, beacons(n).Y, beacons(n).a];
-        known_poses = [known_poses; beacon];
+        beacon_poses = [beacon_poses; beacons(n).X, beacons(n).Y, beacons(n).a];
     end
+    known_poses = [INITIAL_POSE; beacon_poses];
 
     % Get intermediate points per section
     all_poses = INITIAL_POSE;
@@ -91,34 +95,100 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %%%%%%%%%%%%%
 
     %% Step 2: Compute velocities
-    velocities = []; % TODO check if they make sense...
+    control_inputs = []; % TODO check if they make sense...
     for n=1:1:size(smooth_path,1)-1
         p0 = smooth_path(n,:);
         p1 = smooth_path(n+1,:);
         v = p1 - p0;
         lin_vel = norm(v(1:2)) / Dt;
         ang_vel = v(3) / Dt;
-        velocities = [velocities; [lin_vel, ang_vel]];
+        control_inputs = [control_inputs; [lin_vel, ang_vel]];
     end
     % TODO check if should stop at end and how/what to do it
-    velocities(end+1,:) = [0, 0];
+    control_inputs(end+1,:) = [0, 0];
 
     %%% DEBUG %%%
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), velocities(:,1), 'bo')
+        plot(smooth_path(:,1), control_inputs(:,1), 'bo')
         grid on
         title('Linear Velocity')
     
         figure
-        plot(smooth_path(:,1), velocities(:,2), 'bo')
+        plot(smooth_path(:,1), control_inputs(:,2), 'bo')
         grid on
         title('Angular Velocity')
     end
     %%%%%%%%%%%%%
 
-    %% Step 3: Extended Kalamn Filter
-    
+    %% Step 3: Extended Kalamn Filter 
+
+    % Initial values
+    % TODO check this...
+    P_t = 0.01 * eye(3);
+
+    Q = [Vn^2 0
+        0 Wn^2];
+
+    % Get all beacon positions
+    for n=2:1:size(control_inputs,1)
+
+        state_t = smooth_path(n-1,:);
+        
+        %P_t = 
+
+        control_t = control_inputs(n-1,:);
+
+        beacons = BeaconDetection(N, smooth_path(n,:));
+
+        % TODO check and deal with Nans
+        obs_t1 = [beacons(:).d; beacons(:).a]';
+
+        landmarks = beacon_poses(:,1:2);
+        delta_t = Dt;
+
+        % Q =
+
+        a1 = [beacons(:).dn; beacons(:).an];
+        a2 = reshape(a1,1,[]);
+        R = diag(a2);
+
+        [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, delta_t, Q, R);
+
+        state_t = state_t1;
+        P_t = P_t1;
+        
+    end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 
 
