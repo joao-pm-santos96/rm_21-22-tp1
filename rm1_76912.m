@@ -142,7 +142,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         obs_t1 = [beacons(:).d; beacons(:).a]';
         landmarks = beacon_poses(:,1:2);
 
-        % Deal woth NaNs
+        % Deal with NaNs
         [rows, ~] = find(isnan(obs_t1));
         nan_rows = unique(rows);
         b_noises = [beacons(:).dn; beacons(:).an];
@@ -172,7 +172,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     end
    
 
-    %% Step
+    %% Step 4: Write localization file
+    writematrix(ekf_loc, LOC_FILE);
 
 
 
