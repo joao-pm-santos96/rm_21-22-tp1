@@ -1,4 +1,4 @@
-function [z] = sensormodel(b_position, state_t, sigma)
+function [z] = SensorModel(b_position, state_t, sigma)
     % b_position: beacon position [x, y]
     % state_t: robot position at time t [x, y]
     % sigma: distance and angle measure uncertainty [sigma_dist, sigma_angl]

@@ -1,4 +1,4 @@
-function [next_state] = motionmodel(prev_state, c_in, sigma, delta_t)
+function [next_state] = MotionModel(prev_state, c_in, sigma, delta_t)
     % prev_state: previous state [x, y, alpha]
     % c_in: control input [v_lin, v_ang]
     % sigma: linear and angular velocity uncertainty [sigma_lin, sigma_ang]

@@ -39,6 +39,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     end
     
     %% Step 1: Compute all path points
+
     velocity = 5; %TODO where to get this from?
     beacons = BeaconDetection(N);
 
@@ -95,6 +96,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %%%%%%%%%%%%%
 
     %% Step 2: Compute velocities
+
     control_inputs = []; % TODO check if they make sense...
     for n=1:1:size(smooth_path,1)-1
         p0 = smooth_path(n,:);
@@ -155,7 +157,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         
         R = diag(b_noises);
 
-        [state_t1, P_t1] = ekf(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R);
+        [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R);
 
         state_t = state_t1;
         P_t = P_t1;
@@ -174,7 +176,44 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
    
 
     %% Step 4: Write localization file
+
     writematrix(ekf_loc, LOC_FILE);
+
+    %% Step 5: Kinematic Models
+
+    % Differential drive
+    diff_wheels = [];
+    for n=1:1:size(control_inputs,1)
+
+        alpha = smooth_path(n,3);
+        transform = [cos(alpha) 0
+                sin(alpha) 0
+                0 1];
+
+        vels = transform * control_inputs(n,:)';
+        wheels = DiffDriveIK(r,L,vels(1),vels(2),vels(3));
+        diff_wheels = [diff_wheels; wheels];
+    end
+
+    % Tricycle
+    for n=1:1:size(control_inputs,1)
+
+    end
+
+    % Omnidirectional drive
+    omni_wheels = [];
+    for n=1:1:size(control_inputs,1)
+
+        alpha = smooth_path(n,3);
+        transform = [cos(alpha) -sin(alpha) 0
+            sin(alpha) cos(alpha) 0
+            0 0 1];
+        
+        vels = transform * control_inputs(n,:)';
+        wheels = OmniDriveIK(r,L,vels(1),vels(2),vels(3));
+        omni_wheels = [omni_wheels, wheels];
+    end
+
 
 
 

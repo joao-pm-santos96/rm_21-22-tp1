@@ -1,4 +1,4 @@
-function [H] = jacobi(landmark, state)
+function [H] = Jacobi(landmark, state)
     %
     %
     %
