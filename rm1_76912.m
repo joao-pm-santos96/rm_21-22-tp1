@@ -1,5 +1,7 @@
 function rm1_76912(N, Dt, r, L, Vn, Wn)
 
+    % TODO add all funtions to this file!!
+
     %% Default Inputs
     if nargin < 6
         % incerteza (sigma) na velocidade angular a impor ao robot
@@ -29,9 +31,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %% Constants 
     INITIAL_POSE = [0,0,0];
     LOC_FILE = 'loc_76912.txt';
-    DD_FILE = 'dd_76912.txt';
-    TRI_FILE = 'tri_76912.txt';
-    OMNI_FILE = 'omni_76912.txt';
+    DD_FILE = 'DD_76912.txt';
+    TRI_FILE = 'TRI_76912.txt';
+    OMNI_FILE = 'OMNI_76912.txt';
     DEBUG = true;
 
     if (DEBUG)
@@ -224,9 +226,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     end
 
     % Tricycle
-%     for n=1:1:size(control_inputs,1)
-% 
-%     end
+    tri_wheels = [];
+    for n=1:1:size(control_inputs,1)
+        disp('Do me!!')
+    end
+    writematrix(tri_wheels, TRI_FILE)
 
     % Omnidirectional drive
     omni_wheels = [];
