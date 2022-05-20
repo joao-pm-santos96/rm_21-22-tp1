@@ -39,6 +39,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     end
     
     %% Step 1: Compute all path points
+    if (DEBUG)
+        disp('Step 1')
+    end
 
     velocity = 5; %TODO where to get this from?
     beacons = BeaconDetection(N);
@@ -96,6 +99,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %%%%%%%%%%%%%
 
     %% Step 2: Compute velocities
+    if (DEBUG)
+        disp('Step 2')
+    end
 
     control_inputs = []; % TODO check if they make sense...
     for n=1:1:size(smooth_path,1)-1
@@ -124,6 +130,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
     %%%%%%%%%%%%%
 
     %% Step 3: Extended Kalamn Filter 
+    if (DEBUG)
+        disp('Step 3')
+    end
 
     % Initial values
     % TODO check this...
@@ -171,15 +180,23 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
         hold on
         plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
+        title('EKF')
+        grid on
         %TODO draw uncertainty ellipsis
     end
    
 
     %% Step 4: Write localization file
+    if (DEBUG)
+        disp('Step 4')
+    end
 
     writematrix(ekf_loc, LOC_FILE);
 
     %% Step 5: Kinematic Models
+    if (DEBUG)
+        disp('Step 5')
+    end
 
     % Differential drive
     diff_wheels = [];
@@ -191,27 +208,54 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
                 0 1];
 
         vels = transform * control_inputs(n,:)';
-        wheels = DiffDriveIK(r,L,vels(1),vels(2),vels(3));
-        diff_wheels = [diff_wheels; wheels];
+        [wr, wl] = DiffDriveIK(r,L,vels(1),vels(2),vels(3));
+        diff_wheels = [diff_wheels; [wr, wl]];
+    end
+    writematrix(diff_wheels, DD_FILE);
+    
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1), diff_wheels(:,1))
+        hold on
+        plot(smooth_path(:,1), diff_wheels(:,2))
+        legend('Right wheel', 'Left wheel')
+        title('Differential Drive')
+        grid on
     end
 
     % Tricycle
-    for n=1:1:size(control_inputs,1)
-
-    end
+%     for n=1:1:size(control_inputs,1)
+% 
+%     end
 
     % Omnidirectional drive
     omni_wheels = [];
     for n=1:1:size(control_inputs,1)
 
         alpha = smooth_path(n,3);
-        transform = [cos(alpha) -sin(alpha) 0
-            sin(alpha) cos(alpha) 0
-            0 0 1];
+%         transform = [cos(alpha) -sin(alpha) 0
+%             sin(alpha) cos(alpha) 0
+%             0 0 1];
+        transform = [cos(alpha) 0
+                sin(alpha) 0
+                0 1]; % TODO is it this or the above?
         
         vels = transform * control_inputs(n,:)';
-        wheels = OmniDriveIK(r,L,vels(1),vels(2),vels(3));
-        omni_wheels = [omni_wheels, wheels];
+        [w1, w2, w3] = OmniDriveIK(r,L,vels(1),vels(2),vels(3));
+        omni_wheels = [omni_wheels; [w1, w2, w3]];
+    end
+    writematrix(omni_wheels, OMNI_FILE);
+
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1), omni_wheels(:,1))
+        hold on
+        plot(smooth_path(:,1), omni_wheels(:,2))
+        hold on
+        plot(smooth_path(:,1), omni_wheels(:,3))
+        legend('Wheel 1', 'Wheel 2', 'Wheel 3')
+        title('Omnidrive')
+        grid on
     end
 
 
