@@ -1,8 +1,12 @@
-function rm1_76912(N, Dt, r, L, Vn, Wn)
+function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
     % TODO add all funtions to this file!!
 
     %% Default Inputs
+    if nargin < 7
+        % velocidade desejada
+        vel = 5; %m/s
+    end
     if nargin < 6
         % incerteza (sigma) na velocidade angular a impor ao robot
         Wn = 0.1; %rad/s
@@ -45,7 +49,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         disp('Step 1')
     end
 
-    velocity = 5; %TODO where to get this from?
     beacons = BeaconDetection(N);
 
     % Get all known points
@@ -64,7 +67,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn)
         d = norm(p1-p0);
         
         % Get n points
-        n_points = round(d / (velocity * Dt));
+        n_points = round(d / (vel * Dt));
 
         deltas = (1:1:n_points)/n_points;
         step_poses = p0+deltas'*(p1-p0);
