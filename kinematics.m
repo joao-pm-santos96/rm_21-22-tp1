@@ -1,14 +1,14 @@
 clc
 close all
 
-DD = false;
+DD = true;
 TRI = false;
 OMNI = true;
 
 %% DD
 if(DD)
 
-    syms theta r L w_l w_r X TH real
+    syms theta r L w_l w_r X TH omega real
 
     % Forward
     trans = [cos(theta) -sin(theta) 0
@@ -27,8 +27,9 @@ if(DD)
     
     P1 = subs(P,omega,theta/t);
 
-    solve([X TH]' == P1([1 3]), [w_r, w_l], 'ReturnConditions', true)
-
+    S = solve([X TH]' == P1([1 3]), [w_r, w_l], 'ReturnConditions', true);
+    wr = simplify(S.w_r)
+    wl = simplify(S.w_l)
 
 end
 
@@ -54,5 +55,8 @@ if(OMNI)
     pos = int(vels, t);
 
     S = solve([X Y TH]' == pos, [w1 w2 w3], 'ReturnConditions', true);
+    w1 = simplify(S.w1)
+    w2 = simplify(S.w2)
+    w3 = simplify(S.w3)
 
 end

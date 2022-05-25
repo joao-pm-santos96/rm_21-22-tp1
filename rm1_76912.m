@@ -207,10 +207,27 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         disp('Step 5')
     end
 
+    % Differential drive
+    diff_wheels = [];
+    for n=2:1:size(smooth_path,1)
+
+        wheels = DiffDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
+        diff_wheels = [diff_wheels; wheels]; % TODO check order of wheels and NaNs
+
+    end
+    writematrix(diff_wheels, DD_FILE);
     
 
 
+    % Omnidirectional drive
+    omni_wheels = [];
+    for n=2:1:size(smooth_path,1)
 
+        wheels = OmniDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
+        omni_wheels = [omni_wheels; wheels]; % TODO check order of wheels and NaNs
+    
+    end
+    writematrix(omni_wheels, OMNI_FILE);
 
 
 
