@@ -2,6 +2,10 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
     % TODO add all funtions to this file!!
 
+%     arguments
+% 
+%     end
+
     %% Default Inputs
     if nargin < 7
         % velocidade desejada
