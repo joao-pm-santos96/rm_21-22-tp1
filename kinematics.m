@@ -1,67 +1,66 @@
 clc
 close all
 
+DD = true;
+TRI = false;
+OMNI = false;
+
 %% DD
-syms r L th wr wl t x y real
+if(DD)
 
-M = [r/2 r/2
-    0 0 
-    -r/L r/L];
+    syms theta r L w_l w_r X TH real
 
-wheels = [wl wr]';
+    % Forward
+    trans = [cos(theta) -sin(theta) 0
+        sin(theta) cos(theta) 0
+        0 0 1];
 
-trans = [cos(th*t) -sin(th*t) 0
-    sin(th*t) cos(th*t) 0
-    0 0 1];
+    M = [r/2 r/2
+        0 0 
+        -r/L r/L];
 
-vels_dd = trans*M*wheels;
-int_dd = int(vels_dd, 't');
+    V = trans * M * [w_l w_r]';
 
-S = solve([x z]' == int_dd([1 3]), [wl wr]);
-simplify(S.wl)
-simplify(S.wr)
+    % Inverse
+    V1 = subs(V,theta, omega*t);
+    P = int(V1,t);
+    
+    P1 = subs(P,omega,theta/t);
 
-clear r L th wr wl
+    solve([X TH]' == P1([1 3]), [w_r, w_l], 'ReturnConditions', true)
+
+
+end
 
 %% Tricycle
-syms ws r alpha th L real
+if(TRI)
 
-M = [r*cos(alpha)
-    0
-    r/L*sin(alpha)];
+    syms theta w_t r_t alpha L t omega X TH real
 
-wheels = ws;
+    % Forward
+    trans = [cos(theta) -sin(theta) 0
+        sin(theta) cos(theta) 0
+        0 0 1];
 
-trans = [cos(th) -sin(th) 0
-    sin(th) cos(th) 0
-    0 0 1];
+    M = [w_t * r_t
+        0
+        w_t * r_t * tan(alpha)/L];
 
-vels_tri = trans*M*wheels
-int_tri = int(vels_tri, 't')
+    V = trans * M;
 
-solve([x z]' == int_tri([1 3]), [ws, alpha])
+    % Inverse
+    V1 = subs(V,theta, omega*t);
+    P = int(V1,t);
+    
+    %P1 = subs(P,omega,w_t*r_t*tan(alpha)/L);
+    P1 = subs(P,omega,theta/t);
 
-clear ws r alpha th L
+    solve([X TH]' == P1([1 3]), [w_t, alpha], 'ReturnConditions', true)
+
+end
 
 %% Omni
-syms r L th w1 w2 w3 real
+if(OMNI)
 
-M = [0 r/sqrt(3) -r/sqrt(3)
-    -2*r/3 r/3 r/3
-    r/(3*L) r/(3*L) r/(3*L)];
 
-wheels = [w1 w2 w3]';
-
-trans = [cos(th) -sin(th) 0
-    sin(th) cos(th) 0
-    0 0 1];
-
-vels_omni = trans*M*wheels
-int_omni = int(vels_omni, 't')
-
-S = solve([x y z]' == int_omni,  [w1 w2 w3]);
-simplify(S.w1)
-simplify(S.w2)
-simplify(S.w3)
-
-clear r L th w1 w2 w3
+end
