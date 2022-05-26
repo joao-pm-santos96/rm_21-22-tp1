@@ -2,6 +2,7 @@
 import sympy as sym
 from sympy import pprint, pi
 from sympy.printing.octave import octave_code
+from sympy.printing.latex import latex
 from sympy.functions import *
 
 # SETUP
@@ -10,16 +11,21 @@ sym.init_printing(use_unicode=True, wrap_line=False)
 # DEFINE COMMONS
 R = sym.Symbol('R', real=True, positive=True)
 L = sym.Symbol('L', real=True, positive=True)
-t = sym.Symbol('t', real=True, positive=True)
+dt = sym.Symbol('dt', real=True, positive=True)
 tau = sym.Symbol('tau', real=True, positive=True)
+
 X = sym.Symbol('X', real=True)
 Y = sym.Symbol('Y', real=True)
 TH = sym.Symbol('TH', real=True)
 
-theta = sym.Function('theta', real=True)(t)
+X0 = sym.Symbol('X0', real=True)
+Y0 = sym.Symbol('Y0', real=True)
+TH0 = sym.Symbol('TH0', real=True)
+
+theta = sym.Function('theta', real=True)(dt)
 
 Rot = sym.Matrix([[cos(theta), -sin(theta), 0],[sin(theta), cos(theta), 0],[0, 0, 1]])
-
+start_pos = sym.Matrix([[X0],[Y0],[TH0]])
 
 def DiffDrive():
 
@@ -34,20 +40,20 @@ def DiffDrive():
     # Inverse    
     omega = vels[2]
     vels = vels.subs(theta, omega * tau)
-    pos = sym.integrate(vels, (tau,0,t))
-    pos = sym.simplify(pos)
+    frw_k = sym.integrate(vels, (tau,0,dt)) + start_pos
+    frw_k = sym.simplify(frw_k)
 
-    sol = None
+    inv_k = None
     for i in [0]:
 
         # pprint(pos[0].args[i].cond)
 
-        A = sym.Matrix([[pos[0].args[i].expr],[pos[2]]])
+        A = sym.Matrix([[frw_k[0].args[i].expr],[frw_k[2]]])
         B = sym.Matrix([[X],[TH]])
         eq = sym.Eq(A, B)
-        sol = sym.solve(eq, (wl, wr), dict=True)
+        inv_k = sym.solve(eq, (wl, wr), dict=True)
 
-    return(sol[0])      
+    return(inv_k[0])      
 
 def OmniDrive():
 
@@ -65,21 +71,21 @@ def OmniDrive():
     # Inverse
     omega = vels[2]
     vels = vels.subs(theta, omega * tau)
-    pos = sym.integrate(vels, (tau,0,t))
-    pos = sym.simplify(pos)
+    frw_k = sym.integrate(vels, (tau,0,dt)) + start_pos
+    frw_k = sym.simplify(frw_k)
     
-    sol = None
+    inv_k = None
     for i in [1]:
 
         # pprint(pos[0].args[i].cond)
 
-        A = sym.Matrix([[pos[0].args[i].expr],[pos[1].args[i].expr],[pos[2]]])
+        A = sym.Matrix([[frw_k[0].args[i].expr],[frw_k[1].args[i].expr],[frw_k[2]]])
         B = sym.Matrix([[X],[Y],[TH]])
         eq = sym.Eq(A,B)
 
-        sol = sym.solve(eq, (w1, w2, w3), dict=True)
+        inv_k = sym.solve(eq, (w1, w2, w3), dict=True)
 
-    return(sol[0])
+    return(inv_k[0])
 
 def Tricycle():
     
@@ -95,26 +101,28 @@ def Tricycle():
     # Inverse
     omega = vels[2]
     vels = vels.subs(theta, omega * tau)
-    pos = sym.integrate(vels, (tau,0,t))
-    pos = sym.simplify(pos)
-
-    sol = None
+    frw_k = sym.integrate(vels, (tau,0,dt)) + start_pos
+    frw_k = sym.simplify(frw_k)
+ 
+    inv_k = None
     for i in [0]:
 
         # pprint(pos[0].args[i].cond)
 
-        A = sym.Matrix([[pos[0].args[i].expr],[pos[2]]])
+        A = sym.Matrix([[frw_k[0].args[i].expr],[frw_k[2]]])
         B = sym.Matrix([[X],[TH]])
         eq = sym.Eq(A, B)
-        sol = sym.solve(eq, (w, alpha), dict=True)
+        inv_k = sym.solve(eq, (w, alpha), dict=True)
 
-    return(sol[0])
+    return(inv_k[0])
 
 if __name__ == '__main__':
     
-    # sol = DiffDrive()
-    sol = OmniDrive()
-    # sol = Tricycle()
-    
-    print(octave_code(sol))
+    for f in [DiffDrive, OmniDrive, Tricycle]:
+
+        inv_k = f()
+        print(f'{f.__name__} :')
+        print(octave_code(inv_k))
+        # print(latex(inv_k))
+        print()
 
