@@ -1,20 +1,14 @@
-function [] = TricycleIK(r, L, start_pos, end_pos, dt)
+function TricycleIK(R, L, start_pos, end_pos, dt)
 
-    delta = end_pos - start_pos;
+    X0 = start_pos(1);
+    Y0 = start_pos(2)
+    TH0 = start_pos(3);
 
-    X = delta(1);
-    theta = delta(3);
-    TH=theta;
-    k=0;
-    r_t=r;
-    t = dt;
+    X = end_pos(1);
+    Y = end_pos(2)
+    TH = end_pos(3);
 
-    w_t= (X*theta)/(r_t*t*sin(theta))
-    alpha= atan((L*TH*sin(theta))/(X*theta)) + pi*k
-
-    w_t= (X*theta)/(r_t*t*sin(theta))
-    alpha= atan((L*TH*sin(theta))/(X*theta))
-
-    w_t= (TH*X)/(r_t*t*sin(TH))
-    alpha= pi + atan((L*sin(TH))/X)
+    inv_k = {alpha: atan(L.*sin(TH - TH0)./(X - X0)), 
+    w: (TH - TH0).*(X - X0)./(R.*dt.*sin(TH - TH0))};
+    
 end

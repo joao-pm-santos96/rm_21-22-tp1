@@ -1,21 +1,15 @@
-function wheels = OmniDriveIK(r, L, start_pos, end_pos, dt)
+function OmniDriveIK(R, L, start_pos, end_pos, dt)
 
-    delta = end_pos - start_pos;
-    X=delta(1);
-    Y=delta(2);
-    theta=start_pos(3);
-    TH=theta;
-    R=r;
-    t=dt;
+    X0 = start_pos(1);
+    Y0 = start_pos(2)
+    TH0 = start_pos(3);
 
-%     wheels = [-(delta(2) - L*delta(3))/(r*dt) %w1
-%         (delta(2) + 3^(1/2)*delta(1) + 2*L*delta(3))/(2*r*dt) % w2
-%         -(delta(2) - 3^(1/2)*delta(1) + 2*L*delta(3))/(2*r*dt) ]'; % w3
+    X = end_pos(1);
+    Y = end_pos(2)
+    TH = end_pos(3);
 
-    wheels = [(X*sin(theta) - Y*cos(theta) + L*TH)/(R*t)
-        (Y*cos(theta) - X*sin(theta) + 2*L*TH + 3^(1/2)*X*cos(theta) + 3^(1/2)*Y*sin(theta))/(2*R*t)
-        (X*sin(theta) - Y*cos(theta) - 2*L*TH + 3^(1/2)*X*cos(theta) + 3^(1/2)*Y*sin(theta))/(2*R*t)];
-    
-    
-    
+    inv_k = {w1: L.*TH./(R.*dt) - L.*TH0./(R.*dt) - Y./(R.*dt) + Y0./(R.*dt), 
+    w2: L.*TH./(R.*dt) - L.*TH0./(R.*dt) + sqrt(3)*X./(2*R.*dt) - sqrt(3)*X0./(2*R.*dt) + Y./(2*R.*dt) - Y0./(2*R.*dt), 
+    w3: -L.*TH./(R.*dt) + L.*TH0./(R.*dt) + sqrt(3)*X./(2*R.*dt) - sqrt(3)*X0./(2*R.*dt) - Y./(2*R.*dt) + Y0./(2*R.*dt)};
+
 end

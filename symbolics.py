@@ -11,8 +11,8 @@ sym.init_printing(use_unicode=True, wrap_line=False)
 # DEFINE COMMONS
 R = sym.Symbol('R', real=True, positive=True)
 L = sym.Symbol('L', real=True, positive=True)
+t = sym.Symbol('t', real=True, positive=True)
 dt = sym.Symbol('dt', real=True, positive=True)
-tau = sym.Symbol('tau', real=True, positive=True)
 
 X = sym.Symbol('X', real=True)
 Y = sym.Symbol('Y', real=True)
@@ -22,11 +22,12 @@ X0 = sym.Symbol('X0', real=True)
 Y0 = sym.Symbol('Y0', real=True)
 TH0 = sym.Symbol('TH0', real=True)
 
-theta = sym.Function('theta', real=True)(dt)
+theta = sym.Function('theta', real=True)(t)
 
 Rot = sym.Matrix([[cos(theta), -sin(theta), 0],[sin(theta), cos(theta), 0],[0, 0, 1]])
 start_pos = sym.Matrix([[X0],[Y0],[TH0]])
 
+# DEFINE FUNCTIONS
 def DiffDrive():
 
     wl = sym.Symbol('wl', real=True)
@@ -39,8 +40,8 @@ def DiffDrive():
 
     # Inverse    
     omega = vels[2]
-    vels = vels.subs(theta, omega * tau)
-    frw_k = sym.integrate(vels, (tau,0,dt)) + start_pos
+    vels = vels.subs(theta, omega * t)
+    frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
 
     inv_k = None
@@ -70,8 +71,8 @@ def OmniDrive():
 
     # Inverse
     omega = vels[2]
-    vels = vels.subs(theta, omega * tau)
-    frw_k = sym.integrate(vels, (tau,0,dt)) + start_pos
+    vels = vels.subs(theta, omega * t)
+    frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
     
     inv_k = None
@@ -100,8 +101,8 @@ def Tricycle():
 
     # Inverse
     omega = vels[2]
-    vels = vels.subs(theta, omega * tau)
-    frw_k = sym.integrate(vels, (tau,0,dt)) + start_pos
+    vels = vels.subs(theta, omega * t)
+    frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
  
     inv_k = None
@@ -116,6 +117,7 @@ def Tricycle():
 
     return(inv_k[0])
 
+# MAIN
 if __name__ == '__main__':
     
     for f in [DiffDrive, OmniDrive, Tricycle]:
