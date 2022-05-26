@@ -89,7 +89,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         disp('Step 2')
     end
 
-    control_inputs = []; % TODO check if they make sense...
+    control_inputs = []; 
     for n=1:1:size(smooth_path,1)-1
         p0 = smooth_path(n,:);
         p1 = smooth_path(n+1,:);
@@ -98,7 +98,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         ang_vel = v(3) / Dt;
         control_inputs = [control_inputs; [lin_vel, ang_vel]];
     end
-    % TODO check if should stop at end and how/what to do it
     control_inputs(end+1,:) = [0, 0];
 
     %%% DEBUG %%%
@@ -130,6 +129,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     % Get all beacon positions
     ekf_loc = INITIAL_POSE;
     ekf_p  = P_t;
+    
+    % Build sigma vectors
+    % TODO should be zeros?
+    s_motion = [Vn, Wn]; % uncertainty (sigma) for the motion model
+    s_sensor = [beacons(1).dn; beacons(1).an]; % uncertainty (sigma) for the sensor model
 
     for n=2:1:size(control_inputs,1)
 
@@ -152,7 +156,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         
         R = diag(b_noises);
 
-        [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R);
+        [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R, s_motion, s_sensor);
 
         state_t = state_t1;
         P_t = P_t1;
@@ -168,7 +172,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
         title('EKF')
         grid on
-        %TODO draw uncertainty ellipsis
     end
    
 
@@ -215,12 +218,5 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
     disp(smooth_path(end-1,:))
     disp(smooth_path(end,:))
-
-
-
-
-    
-
-
 
 end
