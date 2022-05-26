@@ -2,38 +2,15 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
     % TODO add all funtions to this file!!
 
-%     arguments
-% 
-%     end
-
     %% Default Inputs
-    if nargin < 7
-        % velocidade desejada
-        vel = 5; %m/s
-    end
-    if nargin < 6
-        % incerteza (sigma) na velocidade angular a impor ao robot
-        Wn = 0.1; %rad/s
-    end
-    if nargin < 5
-        % incerteza (sigma) na velocidade linear a impor ao robot
-        Vn = 0.1; %m/s
-    end
-    if nargin < 4
-        % separacao/afastamento das rodas
-        L = 1; %m
-    end
-    if nargin < 3
-        % raio das rodas do robot
-        r = 0.15; %m
-    end
-    if nargin < 2
-        % intervalo de tempo de amostragem dos sensores
-        Dt = 1; %s
-    end
-    if nargin < 1
-        % numero de farois
-        N = 4;
+    arguments
+        N = 4
+        Dt = 1
+        r = 0.15
+        L = 1
+        Vn = 0.1
+        Wn = 0.1
+        vel = 5
     end
 
     %% Constants 
@@ -199,7 +176,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     if (DEBUG)
         disp('Step 4')
     end
-
     writematrix(ekf_loc, LOC_FILE);
 
     %% Step 5: Kinematic Models
@@ -212,25 +188,33 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     for n=2:1:size(smooth_path,1)
 
         wheels = DiffDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        diff_wheels = [diff_wheels; wheels]; % TODO check order of wheels and NaNs
+        diff_wheels = [diff_wheels; [wheels.wr wheels.wl]]; % TODO check order of wheels and NaNs
 
     end
     writematrix(diff_wheels, DD_FILE);
     
+    % Tricyle
+    tri_wheels = [];
+    for n=2:1:size(smooth_path,1)
 
+        wheels = TricycleIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
+        tri_wheels = [tri_wheels; [wheels.w wheels.alpha]]; % TODO check order of wheels and NaNs
+    
+    end
+    writematrix(tri_wheels, TRI_FILE);
 
     % Omnidirectional drive
     omni_wheels = [];
     for n=2:1:size(smooth_path,1)
 
         wheels = OmniDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        omni_wheels = [omni_wheels; wheels]; % TODO check order of wheels and NaNs
+        omni_wheels = [omni_wheels; [wheels.w1 wheels.w2 wheels.w3]]; % TODO check order of wheels and NaNs
     
     end
     writematrix(omni_wheels, OMNI_FILE);
 
-
-
+    disp(smooth_path(end-1,:))
+    disp(smooth_path(end,:))
 
 
 
@@ -240,75 +224,3 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
 
 end
-
-% % Differential drive
-% diff_wheels = [];
-% for n=1:1:size(control_inputs,1)
-% 
-%     alpha = smooth_path(n,3);
-%     transform = [cos(alpha) 0
-%             sin(alpha) 0
-%             0 1];
-% 
-%     vels = transform * control_inputs(n,:)';
-%     [wr, wl] = DiffDriveIK(r,L,vels(1),vels(2),vels(3));
-%     diff_wheels = [diff_wheels; [wr, wl]];
-% end
-% writematrix(diff_wheels, DD_FILE);
-% 
-% if (DEBUG)
-%     figure
-%     plot(smooth_path(:,1), diff_wheels(:,1))
-%     hold on
-%     plot(smooth_path(:,1), diff_wheels(:,2))
-%     legend('Right wheel', 'Left wheel')
-%     title('Differential Drive')
-%     grid on
-% end
-% 
-% % Tricycle
-% tri_wheels = [];
-% for n=1:1:size(control_inputs,1)
-%     disp('Do me!!')
-% end
-% writematrix(tri_wheels, TRI_FILE)
-% 
-% %     if (DEBUG)
-% %         figure
-% %         plot(smooth_path(:,1), tri_wheels(:,1))
-% %         hold on
-% %         plot(smooth_path(:,1), tri_wheels(:,2))
-% %         legend('Wheel speed', 'Steering angle')
-% %         title('Tricycle')
-% %         grid on
-% %     end
-% 
-% % Omnidirectional drive
-% omni_wheels = [];
-% for n=1:1:size(control_inputs,1)
-% 
-%     alpha = smooth_path(n,3);
-% %         transform = [cos(alpha) -sin(alpha) 0
-% %             sin(alpha) cos(alpha) 0
-% %             0 0 1];
-%     transform = [cos(alpha) 0
-%             sin(alpha) 0
-%             0 1]; % TODO is it this or the above?
-%     
-%     vels = transform * control_inputs(n,:)';
-%     [w1, w2, w3] = OmniDriveIK(r,L,vels(1),vels(2),vels(3));
-%     omni_wheels = [omni_wheels; [w1, w2, w3]];
-% end
-% writematrix(omni_wheels, OMNI_FILE);
-% 
-% if (DEBUG)
-%     figure
-%     plot(smooth_path(:,1), omni_wheels(:,1))
-%     hold on
-%     plot(smooth_path(:,1), omni_wheels(:,2))
-%     hold on
-%     plot(smooth_path(:,1), omni_wheels(:,3))
-%     legend('Wheel 1', 'Wheel 2', 'Wheel 3')
-%     title('Omnidrive')
-%     grid on
-% end
