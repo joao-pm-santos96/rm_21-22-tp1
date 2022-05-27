@@ -114,6 +114,10 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(smooth_path(:,1), control_inputs(:,2), 'bo')
         grid on
         title('Angular Velocity')
+
+        figure
+        r = control_inputs(:,1);
+        quiver(smooth_path(:,1), smooth_path(:,2), r*cos(smooth_path(:,3)), r*sin(smooth_path(:,3)))
     end
     %%%%%%%%%%%%%
 
