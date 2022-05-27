@@ -78,8 +78,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(known_poses(:,1), known_poses(:,2),'r--')
         hold on
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
-        hold on
-        quiver(smooth_path(:,1), smooth_path(:,2), cos(smooth_path(:,3)), sin(smooth_path(:,3)))
         grid on
         title('Path')
     end
@@ -104,18 +102,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     %%% DEBUG %%%
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), control_inputs(:,1), 'bo')
+        plot(smooth_path(:,1),smooth_path(:,2),'g-')
+        hold on
+        vel = control_inputs(:,1);
+        quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)))
         grid on
-        title('Linear Velocity')
-    
-        figure
-        plot(smooth_path(:,1), control_inputs(:,2), 'bo')
-        grid on
-        title('Angular Velocity')
-
-        figure
-        r = control_inputs(:,1);
-        quiver(smooth_path(:,1), smooth_path(:,2), r*cos(smooth_path(:,3)), r*sin(smooth_path(:,3)))
     end
     %%%%%%%%%%%%%
 
