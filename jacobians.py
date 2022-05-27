@@ -22,11 +22,13 @@ s_omega_k = sym.Symbol('s_omega_k', real=True)
 
 A = sym.Matrix([x_k + (v_k+s_v_k) * t * cos(theta_k), y_k + (v_k+s_v_k) * t * sin(theta_k), theta_k + (omega_k+s_omega_k) * t])
 B = sym.Matrix([x_k, y_k, theta_k])
+
 Jfx = A.jacobian(B)
 pprint(Jfx.subs({s_v_k:0, s_omega_k:0}))
 print(octave_code(Jfx))
 
 C = sym.Matrix([s_v_k, s_omega_k])
+
 Jfw = A.jacobian(C)
 pprint(Jfw.subs({s_v_k:0, s_omega_k:0}))
 print(octave_code(Jfw))
