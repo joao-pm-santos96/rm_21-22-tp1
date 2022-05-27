@@ -60,15 +60,13 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     smooth_path = [all_poses(:,1), yq];
 
     % Get smooth path orientations
-    orients = [];
-    for n=1:1:size(smooth_path,1)-1
-        p0 = smooth_path(n,:);
-        p1 = smooth_path(n+1,:);
+    orients = [INITIAL_POSE(3)]; 
+    for n=2:1:size(smooth_path,1)
+        p0 = smooth_path(n-1,:);
+        p1 = smooth_path(n,:);
         v = p1 - p0;
         orients = [orients; atan2(v(2),v(1))];
     end
-    orients(end+1)=orients(end); % Keep one-to-last until end
-
     smooth_path(:,3) = orients;
     
     %%% DEGUB %%%
@@ -120,11 +118,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     end
 
     % Initial values
-    % TODO check this...
-    P_t = 0.01 * eye(3);
-
+    P_t = 0.01 * eye(3); % Initial estimate
     Q = [Vn^2 0
-        0 Wn^2];
+        0 Wn^2]; % Covariance for the zero-mean Gaussin noise
 
     % Get all beacon positions
     ekf_loc = INITIAL_POSE;
@@ -132,8 +128,12 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     
     % Build sigma vectors
     % TODO should be zeros?
-    s_motion = [Vn, Wn]; % uncertainty (sigma) for the motion model
-    s_sensor = [beacons(1).dn; beacons(1).an]; % uncertainty (sigma) for the sensor model
+
+    % s_motion = [Vn, Wn]; % uncertainty (sigma) for the motion model
+    % s_sensor = [beacons(1).dn; beacons(1).an]; % uncertainty (sigma) for the sensor model
+
+    s_motion = zeros(1,2);
+    s_sensor = zeros(1,2);
 
     for n=2:1:size(control_inputs,1)
 

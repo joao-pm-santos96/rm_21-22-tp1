@@ -16,7 +16,10 @@ function [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delt
 
     state_t1_temp = MotionModel(state_t, control_t, sigma_motion, delta_t);
     
-    % TODO which is right?
+    % TODO which is right? Probably mine...
+    % Jfx -> only the sign changes, not a big deal
+    % Jfw -> does not make sense...
+
 %     j1 = - delta_t * control_t(1) * sin(state_t(3));
 %     j2 = - delta_t * control_t(1) * cos(state_t(3));
 %     j3 = - j2;
@@ -57,10 +60,9 @@ function [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delt
         x_l = landmarks(n,1);
         y_l = landmarks(n,2);
 
-        % TODO which is right?
         J = [(x_k1 - x_l)./sqrt((-x_k1 + x_l).^2 + (-y_k1 + y_l).^2) (y_k1 - y_l)./sqrt((-x_k1 + x_l).^2 + (-y_k1 + y_l).^2) 0
             (-y_k1 + y_l)./((1 + (-y_k1 + y_l).^2./(-x_k1 + x_l).^2).*(-x_k1 + x_l).^2) -1./((1 + (-y_k1 + y_l).^2./(-x_k1 + x_l).^2).*(-x_k1 + x_l)) -1];
-        % Jh = [Jh; Jacobi(landmarks(n,:), state_t1_temp)];
+
         Jh = [Jh;J];
     end
     
