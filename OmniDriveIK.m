@@ -1,6 +1,7 @@
 function inv_k = OmniDriveIK(R, L, start_pos, end_pos, dt)
 % OmniDriveIK Inverse Kinematics for the Omnidirectional robot
 %   inv_k = OmniDriveIK(R, L, start_pos, end_pos, dt)
+%   RESTRICTION: w1 ~= -w2 + w3
 %
 %   R: wheel radius
 %   L: wheel base

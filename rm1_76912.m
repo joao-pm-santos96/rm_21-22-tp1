@@ -19,6 +19,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     DD_FILE = 'DD_76912.txt';
     TRI_FILE = 'TRI_76912.txt';
     OMNI_FILE = 'OMNI_76912.txt';
+    DEBUG_FILE = 'DEBUG.txt';
     DEBUG = true;
 
     if (DEBUG)
@@ -71,6 +72,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     
     %%% DEGUB %%%
     if (DEBUG)
+        writematrix(smooth_path, DEBUG_FILE);
+
         figure
         plot(known_poses(:,1), known_poses(:,2),'bo')
         hold on
@@ -216,7 +219,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     end
     writematrix(omni_wheels, OMNI_FILE);
 
-    disp(smooth_path(end-1,:))
-    disp(smooth_path(end,:))
+
 
 end

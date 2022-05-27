@@ -44,8 +44,8 @@ def DiffDrive():
     frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
 
-    inv_k = None
-    for i in [0]:
+    inv_ks = []
+    for i in [0, 1]:
 
         # pprint(pos[0].args[i].cond)
 
@@ -54,7 +54,9 @@ def DiffDrive():
         eq = sym.Eq(A, B)
         inv_k = sym.solve(eq, (wl, wr), dict=True)
 
-    return(inv_k[0])      
+        inv_ks.append(inv_k)
+
+    return(frw_k, inv_ks)      
 
 def OmniDrive():
 
@@ -75,7 +77,7 @@ def OmniDrive():
     frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
     
-    inv_k = None
+    inv_ks = []
     for i in [1]:
 
         # pprint(pos[0].args[i].cond)
@@ -86,7 +88,9 @@ def OmniDrive():
 
         inv_k = sym.solve(eq, (w1, w2, w3), dict=True)
 
-    return(inv_k[0])
+        inv_ks.append(inv_k)
+
+    return(frw_k, inv_ks)
 
 def Tricycle():
     
@@ -105,8 +109,8 @@ def Tricycle():
     frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
  
-    inv_k = None
-    for i in [0]:
+    inv_ks = []
+    for i in [0,1]:
 
         # pprint(pos[0].args[i].cond)
 
@@ -115,16 +119,25 @@ def Tricycle():
         eq = sym.Eq(A, B)
         inv_k = sym.solve(eq, (w, alpha), dict=True)
 
-    return(inv_k[0])
+        inv_ks.append(inv_k)
+
+    return(frw_k, inv_ks)
 
 # MAIN
 if __name__ == '__main__':
     
     for f in [DiffDrive, OmniDrive, Tricycle]:
 
-        inv_k = f()
+        frw_k, inv_ks = f()
+        
         print(f'{f.__name__} :')
-        print(octave_code(inv_k))
+
+        # pprint(frw_k)
+
+        for inv_k in inv_ks:
+            print(octave_code(inv_k))
+        
         # print(latex(inv_k))
+        
         print()
 
