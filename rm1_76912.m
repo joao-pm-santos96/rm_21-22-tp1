@@ -1,8 +1,6 @@
 function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
-    % TODO add all funtions to this file!!
-
-    %% Default Inputs
+    %% Default arguments
     arguments
         N = 4
         Dt = 1
@@ -181,8 +179,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
         title('EKF')
         grid on
-    end
-   
+    end   
 
     %% Step 4: Write localization file
     if (DEBUG)
@@ -197,34 +194,59 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
 
     % Differential drive
     diff_wheels = [];
-    for n=2:1:size(smooth_path,1)
-
-        wheels = DiffDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
+    for n=1:1:size(smooth_path,1)-1
+        wheels = DiffDriveIK(r, L, smooth_path(n,:), smooth_path(n+1,:), Dt); 
         diff_wheels = [diff_wheels; [wheels.wr wheels.wl]]; 
-
     end
+    diff_wheels(end+1,:) = zeros(1, size(diff_wheels, 2)); % TODO should end in vles=0?
     writematrix(diff_wheels, DD_FILE);
+
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1), diff_wheels(:,1)) 
+        hold on
+        plot(smooth_path(:,1), diff_wheels(:,2))
+        legend('wr', 'wl')
+    end
     
     % Tricyle
     tri_wheels = [];
-    for n=2:1:size(smooth_path,1)
-
-        wheels = TricycleIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        tri_wheels = [tri_wheels; [wheels.wt wheels.alpha]]; 
-    
+    for n=1:1:size(smooth_path,1)-1
+        wheels = TricycleIK(r, L, smooth_path(n,:), smooth_path(n+1,:), Dt); 
+        tri_wheels = [tri_wheels; [wheels.wt wheels.alpha]];     
     end
+    tri_wheels(end+1,:) = zeros(1, size(tri_wheels, 2)); % TODO should end in vles=0?
     writematrix(tri_wheels, TRI_FILE);
+
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1), tri_wheels(:,1)) 
+        hold on
+        plot(smooth_path(:,1), tri_wheels(:,2))
+        legend('wt', 'alpha')
+    end
 
     % Omnidirectional drive
     omni_wheels = [];
-    for n=2:1:size(smooth_path,1)
-
-        wheels = OmniDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        omni_wheels = [omni_wheels; [wheels.w1 wheels.w2 wheels.w3]]; 
-    
+    for n=1:1:size(smooth_path,1)-1
+        wheels = OmniDriveIK(r, L, smooth_path(n,:), smooth_path(n+1,:), Dt); 
+        omni_wheels = [omni_wheels; [wheels.w1 wheels.w2 wheels.w3]];     
     end
+    omni_wheels(end+1,:) = zeros(1, size(omni_wheels, 2)); % TODO should end in vles=0?
     writematrix(omni_wheels, OMNI_FILE);
 
-
+    if (DEBUG)
+        figure
+        plot(smooth_path(:,1), omni_wheels(:,1)) 
+        hold on
+        plot(smooth_path(:,1), omni_wheels(:,2))
+        hold on
+        plot(smooth_path(:,1), omni_wheels(:,3))
+        legend('w1', 'w2', 'w3')
+    end
 
 end
+
+%% ADDITIONAL FUNCTIONS
+
+% TODO add all funtions to this file!!
