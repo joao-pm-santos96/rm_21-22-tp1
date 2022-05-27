@@ -191,7 +191,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     for n=2:1:size(smooth_path,1)
 
         wheels = DiffDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        diff_wheels = [diff_wheels; [wheels.wr wheels.wl]]; % TODO check order of wheels and NaNs
+        diff_wheels = [diff_wheels; [wheels.wr wheels.wl]]; 
 
     end
     writematrix(diff_wheels, DD_FILE);
@@ -201,7 +201,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     for n=2:1:size(smooth_path,1)
 
         wheels = TricycleIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        tri_wheels = [tri_wheels; [wheels.w wheels.alpha]]; % TODO check order of wheels and NaNs
+        tri_wheels = [tri_wheels; [wheels.wt wheels.alpha]]; 
     
     end
     writematrix(tri_wheels, TRI_FILE);
@@ -211,7 +211,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     for n=2:1:size(smooth_path,1)
 
         wheels = OmniDriveIK(r, L, smooth_path(n-1,:), smooth_path(n,:), Dt); % TODO should end in vles=0?
-        omni_wheels = [omni_wheels; [wheels.w1 wheels.w2 wheels.w3]]; % TODO check order of wheels and NaNs
+        omni_wheels = [omni_wheels; [wheels.w1 wheels.w2 wheels.w3]]; 
     
     end
     writematrix(omni_wheels, OMNI_FILE);

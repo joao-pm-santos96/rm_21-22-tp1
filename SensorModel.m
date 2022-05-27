@@ -1,9 +1,12 @@
 function [z] = SensorModel(b_position, state_t, sigma)
-    % b_position: beacon position [x, y]
-    % state_t: robot position at time t [x, y]
-    % sigma: distance and angle measure uncertainty [sigma_dist, sigma_angl]
-    %
-    % based from https://github.com/UTS-CAS/Robot-Localization-examples
+% SensorModel Sensor model for LiDAR
+%   [z] = SensorModel(b_position, state_t, sigma)
+%
+%   b_position: beacon position [x, y]
+%   state_t: robot position at time t [x, y]
+%   sigma: distance and angle measure uncertainty [sigma_dist, sigma_angl]
+%
+%   based from https://github.com/UTS-CAS/Robot-Localization-examples
 
     b_x = b_position(1);
     b_y = b_position(2);

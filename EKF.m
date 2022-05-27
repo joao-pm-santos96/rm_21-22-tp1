@@ -1,16 +1,19 @@
 function [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delta_t, Q, R, sigma_motion, sigma_sensor)
-    % state: pose of robot: [x ,y, alpha]
-    % P_t:
-    % control_t: control input at time t [lin_v, ang_v]
-    % obs_t1: measured distance and angle to landmarks Nx2: [dist, angl]
-    % landmakrs: landmarks positions Nx2: [x, y]
-    % delta_t: time interval
-    % Q:
-    % R:
-    % sigma_motion: 
-    % sigma_sensor: 
-    %
-    % based from https://github.com/UTS-CAS/Robot-Localization-examples
+% EKF Extended Kalman Filter
+%   [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delta_t, Q, R, sigma_motion, sigma_sensor)
+%
+%   state: estamite of the pose of robot [x ,y, alpha]
+%   P_t: covariance of the gaussian distribution associated with state
+%   control_t: control input at time t [lin_v, ang_v]
+%   obs_t1: measured distance and angle to landmarks Nx2 [dist, angl]
+%   landmakrs: landmarks positions Nx2 [x, y]
+%   delta_t: time interval
+%   Q: covariance matrix for the process noise
+%   R: covariance matrix for the observation noise
+%   sigma_motion: TODO
+%   sigma_sensor: TODO
+%
+%   based from https://github.com/UTS-CAS/Robot-Localization-examples
 
     %% Prediction
 

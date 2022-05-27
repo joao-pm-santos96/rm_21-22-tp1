@@ -1,9 +1,13 @@
 function [next_state] = MotionModel(prev_state, c_in, sigma, delta_t)
-    % prev_state: previous state [x, y, alpha]
-    % c_in: control input [v_lin, v_ang]
-    % sigma: linear and angular velocity uncertainty [sigma_lin, sigma_ang]
-    %
-    % based from https://github.com/UTS-CAS/Robot-Localization-examples
+% MotionModel Motion model for the general mobile robot in 2D
+%   [next_state] = MotionModel(prev_state, c_in, sigma, delta_t)
+%   
+%   prev_state: previous state [x, y, alpha]
+%   c_in: control input [v_lin, v_ang]
+%   sigma: linear and angular velocity uncertainty [sigma_lin, sigma_ang]
+%   delta_t: time interval
+%
+%   based from https://github.com/UTS-CAS/Robot-Localization-examples
 
     x = prev_state(1);
     y = prev_state(2);

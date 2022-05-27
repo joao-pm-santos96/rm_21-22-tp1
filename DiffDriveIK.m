@@ -1,4 +1,12 @@
 function inv_k = DiffDriveIK(R, L, start_pos, end_pos, dt)
+% DiffDriveIK Inverse Kinematics for the Differential Drive robot
+%   inv_k = DiffDriveIK(R, L, start_pos, end_pos, dt)
+%
+%   R: wheel radius
+%   L: wheel base
+%   start_pos: starting pose [x0, y0, theta0]
+%   end_pos: ending pose [x1, y1, theta1]
+%   dt: delta time
 
     X0 = start_pos(1);
     % Y0 = start_pos(2);
