@@ -80,6 +80,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(known_poses(:,1), known_poses(:,2),'r--')
         hold on
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
+        hold on
+        quiver(smooth_path(:,1), smooth_path(:,2), cos(smooth_path(:,3)), sin(smooth_path(:,3)))
         grid on
         title('Path')
     end
