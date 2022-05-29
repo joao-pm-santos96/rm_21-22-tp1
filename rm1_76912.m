@@ -114,152 +114,45 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     end
 
     % Initial values
-    P_t = 0.01 * eye(3); % Initial estimate
-    Q = [Vn^2 0
-        0 Wn^2]; % Covariance for the zero-mean Gaussin noise
-
-    % Get all beacon positions
-    ekf_loc = INITIAL_POSE;
-    ekf_p  = P_t;
-    
-    % Build sigma vectors
-    % TODO should be zeros?
-
-    % s_motion = [Vn, Wn]; % uncertainty (sigma) for the motion model
-    % s_sensor = [beacons(1).dn; beacons(1).an]; % uncertainty (sigma) for the sensor model
-
-%     s_motion = zeros(1,2);
-%     s_sensor = zeros(1,2);
-
-%     for n=2:1:size(control_inputs,1)
-% 
-%         state_t = smooth_path(n-1,:);
-%         control_t = control_inputs(n-1,:);
-%         beacons = BeaconDetection(N, smooth_path(n,:));
-%         obs_t1 = [beacons(:).d; beacons(:).a]';
-%         landmarks = beacon_poses(:,1:2);
-% 
-%         % Deal with NaNs
-%         [rows, ~] = find(isnan(obs_t1));
-%         nan_rows = unique(rows);
-%         b_noises = [beacons(:).dn; beacons(:).an];
-% 
-%         obs_t1(nan_rows,:) = [];
-%         landmarks(nan_rows,:) = [];
-%         b_noises(:,nan_rows) = [];
-% 
-%         b_noises = reshape(b_noises,1,[]);
-%         
-%         R = diag(b_noises);
-% 
-%         [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R, s_motion, s_sensor);
-% 
-%         state_t = state_t1;
-%         P_t = P_t1;
-% 
-%         ekf_loc = [ekf_loc; state_t];
-%         ekf_p = [ekf_p; P_t];
-%     end
-
-
-    state_t = INITIAL_POSE';
-    P_t = eye(3);
+    state_t = INITIAL_POSE;
+    P_t = eye(3) * 0.01;
     Q = [Vn^2 0
         0 Wn^2];
 
     ekf_loc = state_t;
     ekf_p = P_t;
 
-    close all
-    figure
-    plot(beacon_poses(:,1), beacon_poses(:,2), 'ko')
-    hold on
-    plot(smooth_path(:,1),smooth_path(:,2),'g--')
-    hold on
-%     legend()
-
     for n=1:1:size(control_inputs,1)
 
-        control_t = control_inputs(n,:)';
-%         control_t = [2,0.0]';
-
-        theta = state_t(3);
-        T = [cos(theta) 0
-            sin(theta) 0
-            0 1];                   
-        state_t1 = (T * control_t) .* Dt + state_t;
-
-%         state_t1(3) = wrapToPi(state_t1(3))
-        B = BeaconDetection(N, state_t1, [0,0]); % TODO REMOVE NOISE 0 0
+        control_t = control_inputs(n,:);
+        state_t1 = MotionModel(state_t, control_t, [0 0], Dt);
         
-        obs_t1 = [B(:).d; B(:).a];
-        lm_xy = [B(:).X; B(:).Y];
-        obs_n = [B(:).dn; B(:).an];
-
+        B = BeaconDetection(N, state_t1, [0 0]); % TODO REMOVE NOISE 0 0
+        
+        obs_t1 = [B(:).d; B(:).a]';
+        lm_xy = [B(:).X; B(:).Y]';
+        obs_n = [B(:).dn; B(:).an]';
         
         % Deal with NaNs
-        [rows, cols] = find(isnan(obs_t1));
+        [rows, ~] = find(isnan(obs_t1));
         nan_rows = unique(rows);
-        nan_cols = unique(cols);
 
-%         obs_t1(:,2) = wrapToPi(obs_t1(:,2));
-%         obs_t1(nan_rows,:) = [];
-%         lm_xy(nan_rows,:) = [];
-%         obs_n(:,nan_rows) = [];
-        obs_t1(:, nan_cols) = [];
-        lm_xy(:, nan_cols) = [];
-        obs_n(:,nan_cols) = [];
+        obs_t1(nan_rows, :) = [];
+        lm_xy(nan_rows, :) = [];
+        obs_n(nan_rows, :) = [];
 
-        ijk = 1;
-        obs_t1 = obs_t1(:,1:ijk);
-        lm_xy = lm_xy(:,1:ijk);
-        obs_n = obs_n(:,1:ijk);
-        
-%         for k=1:1:size(obs_t1,1)
-%             plot(lm_xy(k,1), lm_xy(k,2), 'bd')
-%             hold on            
-%             angle = obs_t1(k,2) + state_t1(3);
-%             quiver(state_t1(1), state_t1(2), obs_t1(k,1)*cos(angle), obs_t1(k,1)*sin(angle));
-%             hold on
-%             plot(state_t1(1), state_t1(2), 'ro')
-%             hold on
-%         end
-% 
-%         pause
-
-
-
-
-
-
-        b_noises = reshape(obs_n,1,[]);
+        b_noises = reshape(obs_n',1,[]);
         R = diag(b_noises).^2;
 
-        [state_t1, P_t1] = MyEKF3(state_t, control_t, obs_t1, P_t, lm_xy, Q, R, Dt)
+        [state_t1, P_t1] = MyEKF(state_t, control_t, obs_t1, P_t, lm_xy, Q, R, Dt);
 
         state_t = state_t1;
         P_t = P_t1;
 
         ekf_loc = [ekf_loc; state_t];
-        ekf_p = [ekf_p; P_t];
-
-
-        
+        ekf_p = [ekf_p; P_t];       
 
     end
-
-
-    return
-
-
-
-
-
-
-
-
-
-
 
     if (DEBUG)
         figure

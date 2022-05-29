@@ -89,14 +89,14 @@ function [x_t1, P_t1] = MyEKF3(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
 %     quiver(XX, YY, Xa, Ya, 'off', 'm--')
 %     hold on
 
-    plot(lm_xy(1,:), lm_xy(2,:), 'rd')
-    hold on
-
-    plot(x_t1_pred(1), x_t1_pred(2), 'b*')
-    hold on
-
-    plot(x_t1(1), x_t1(2), 'ks')
-    hold on
+%     plot(lm_xy(1,:), lm_xy(2,:), 'rd')
+%     hold on
+% 
+%     plot(x_t1_pred(1), x_t1_pred(2), 'b*')
+%     hold on
+% 
+%     plot(x_t1(1), x_t1(2), 'ks')
+%     hold on
 
 
 
