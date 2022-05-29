@@ -17,11 +17,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     DD_FILE = 'DD_76912.txt';
     TRI_FILE = 'TRI_76912.txt';
     OMNI_FILE = 'OMNI_76912.txt';
-    DEBUG_FILE = 'DEBUG.txt';
     DEBUG = true;
 
     if (DEBUG)
         close all
+        clc
     end
     
     %% Step 1: Compute all path points
@@ -70,8 +70,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     
     %%% DEGUB %%%
     if (DEBUG)
-        writematrix(smooth_path, DEBUG_FILE);
-
         figure
         plot(known_poses(:,1), known_poses(:,2),'bo')
         hold on
@@ -130,38 +128,138 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     % s_motion = [Vn, Wn]; % uncertainty (sigma) for the motion model
     % s_sensor = [beacons(1).dn; beacons(1).an]; % uncertainty (sigma) for the sensor model
 
-    s_motion = zeros(1,2);
-    s_sensor = zeros(1,2);
+%     s_motion = zeros(1,2);
+%     s_sensor = zeros(1,2);
 
-    for n=2:1:size(control_inputs,1)
+%     for n=2:1:size(control_inputs,1)
+% 
+%         state_t = smooth_path(n-1,:);
+%         control_t = control_inputs(n-1,:);
+%         beacons = BeaconDetection(N, smooth_path(n,:));
+%         obs_t1 = [beacons(:).d; beacons(:).a]';
+%         landmarks = beacon_poses(:,1:2);
+% 
+%         % Deal with NaNs
+%         [rows, ~] = find(isnan(obs_t1));
+%         nan_rows = unique(rows);
+%         b_noises = [beacons(:).dn; beacons(:).an];
+% 
+%         obs_t1(nan_rows,:) = [];
+%         landmarks(nan_rows,:) = [];
+%         b_noises(:,nan_rows) = [];
+% 
+%         b_noises = reshape(b_noises,1,[]);
+%         
+%         R = diag(b_noises);
+% 
+%         [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R, s_motion, s_sensor);
+% 
+%         state_t = state_t1;
+%         P_t = P_t1;
+% 
+%         ekf_loc = [ekf_loc; state_t];
+%         ekf_p = [ekf_p; P_t];
+%     end
 
-        state_t = smooth_path(n-1,:);
-        control_t = control_inputs(n-1,:);
-        beacons = BeaconDetection(N, smooth_path(n,:));
-        obs_t1 = [beacons(:).d; beacons(:).a]';
-        landmarks = beacon_poses(:,1:2);
 
-        % Deal with NaNs
-        [rows, ~] = find(isnan(obs_t1));
-        nan_rows = unique(rows);
-        b_noises = [beacons(:).dn; beacons(:).an];
+    state_t = INITIAL_POSE';
+    P_t = eye(3);
+    Q = [Vn^2 0
+        0 Wn^2];
 
-        obs_t1(nan_rows,:) = [];
-        landmarks(nan_rows,:) = [];
-        b_noises(:,nan_rows) = [];
+    ekf_loc = state_t;
+    ekf_p = P_t;
 
-        b_noises = reshape(b_noises,1,[]);
+    close all
+    figure
+    plot(beacon_poses(:,1), beacon_poses(:,2), 'ko')
+    hold on
+    plot(smooth_path(:,1),smooth_path(:,2),'g--')
+    hold on
+%     legend()
+
+    for n=1:1:size(control_inputs,1)
+
+        control_t = control_inputs(n,:)';
+%         control_t = [2,0.0]';
+
+        theta = state_t(3);
+        T = [cos(theta) 0
+            sin(theta) 0
+            0 1];                   
+        state_t1 = (T * control_t) .* Dt + state_t;
+
+%         state_t1(3) = wrapToPi(state_t1(3))
+        B = BeaconDetection(N, state_t1, [0,0]); % TODO REMOVE NOISE 0 0
         
-        R = diag(b_noises);
+        obs_t1 = [B(:).d; B(:).a];
+        lm_xy = [B(:).X; B(:).Y];
+        obs_n = [B(:).dn; B(:).an];
 
-        [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, Dt, Q, R, s_motion, s_sensor);
+        
+        % Deal with NaNs
+        [rows, cols] = find(isnan(obs_t1));
+        nan_rows = unique(rows);
+        nan_cols = unique(cols);
+
+%         obs_t1(:,2) = wrapToPi(obs_t1(:,2));
+%         obs_t1(nan_rows,:) = [];
+%         lm_xy(nan_rows,:) = [];
+%         obs_n(:,nan_rows) = [];
+        obs_t1(:, nan_cols) = [];
+        lm_xy(:, nan_cols) = [];
+        obs_n(:,nan_cols) = [];
+
+        ijk = 1;
+        obs_t1 = obs_t1(:,1:ijk);
+        lm_xy = lm_xy(:,1:ijk);
+        obs_n = obs_n(:,1:ijk);
+        
+%         for k=1:1:size(obs_t1,1)
+%             plot(lm_xy(k,1), lm_xy(k,2), 'bd')
+%             hold on            
+%             angle = obs_t1(k,2) + state_t1(3);
+%             quiver(state_t1(1), state_t1(2), obs_t1(k,1)*cos(angle), obs_t1(k,1)*sin(angle));
+%             hold on
+%             plot(state_t1(1), state_t1(2), 'ro')
+%             hold on
+%         end
+% 
+%         pause
+
+
+
+
+
+
+        b_noises = reshape(obs_n,1,[]);
+        R = diag(b_noises).^2;
+
+        [state_t1, P_t1] = MyEKF3(state_t, control_t, obs_t1, P_t, lm_xy, Q, R, Dt)
 
         state_t = state_t1;
         P_t = P_t1;
 
         ekf_loc = [ekf_loc; state_t];
         ekf_p = [ekf_p; P_t];
+
+
+        
+
     end
+
+
+    return
+
+
+
+
+
+
+
+
+
+
 
     if (DEBUG)
         figure
@@ -170,7 +268,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
         title('EKF')
         grid on
+        return
     end   
+
+
+    return
 
     %% Step 4: Write localization file
     if (DEBUG)

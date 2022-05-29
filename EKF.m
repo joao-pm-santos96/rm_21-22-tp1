@@ -17,7 +17,7 @@ function [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delt
 
     %% Prediction
 
-    state_t1_temp = MotionModel(state_t, control_t, sigma_motion, delta_t);
+    state_t1_temp = MotionModel(state_t, control_t, [0,0], delta_t);
     
     % TODO which is right? Probably mine...
     % Jfx -> only the sign changes, not a big deal
@@ -49,7 +49,7 @@ function [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delt
     z_pred = [];
 
     for n=1:1:N
-        z = SensorModel(landmarks(n,:), state_t1_temp, sigma_sensor);
+        z = SensorModel(landmarks(n,:), state_t1_temp, [0,0]);
         z(1,2) = wrapToPi(z(1,2));
         z_pred = [z_pred; z'];
     end
@@ -63,10 +63,10 @@ function [state_t1, P_t1] = EKF(state_t, P_t, control_t, obs_t1, landmarks, delt
         x_l = landmarks(n,1);
         y_l = landmarks(n,2);
 
-        J = [(x_k1 - x_l)./sqrt((-x_k1 + x_l).^2 + (-y_k1 + y_l).^2) (y_k1 - y_l)./sqrt((-x_k1 + x_l).^2 + (-y_k1 + y_l).^2) 0
+        H = [(x_k1 - x_l)./sqrt((-x_k1 + x_l).^2 + (-y_k1 + y_l).^2) (y_k1 - y_l)./sqrt((-x_k1 + x_l).^2 + (-y_k1 + y_l).^2) 0
             (-y_k1 + y_l)./((1 + (-y_k1 + y_l).^2./(-x_k1 + x_l).^2).*(-x_k1 + x_l).^2) -1./((1 + (-y_k1 + y_l).^2./(-x_k1 + x_l).^2).*(-x_k1 + x_l)) -1];
-
-        Jh = [Jh;J];
+%         H=jacobi(landmarks(n,:), x_k1, y_k1);
+        Jh = [Jh;H];
     end
     
     S = Jh * P_t1_temp * Jh' + R;
