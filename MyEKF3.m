@@ -48,7 +48,8 @@ function [x_t1, P_t1] = MyEKF3(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
     innov = z_all - h_all;
 
     S = jh * P_t1_pred * jh' + R;
-    K = P_t1_pred * jh' * inv(S);
+    K = P_t1_pred * jh' * pinv(S);
+%     K = P_t1_pred * jh' * pinv(S);
 
     x_t1 = x_t1_pred + K * innov;
     P_t1 = P_t1_pred - K * S * K';
