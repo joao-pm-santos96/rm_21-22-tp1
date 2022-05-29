@@ -127,7 +127,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         control_t = control_inputs(n,:);
         state_t1 = MotionModel(state_t, control_t, [0 0], Dt);
         
-        B = BeaconDetection(N, state_t1, [0 0]); % TODO REMOVE NOISE 0 0
+        B = BeaconDetection(N, state_t1);
         
         obs_t1 = [B(:).d; B(:).a]';
         lm_xy = [B(:).X; B(:).Y]';
@@ -144,7 +144,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         b_noises = reshape(obs_n',1,[]);
         R = diag(b_noises).^2;
 
-        [state_t1, P_t1] = MyEKF(state_t, control_t, obs_t1, P_t, lm_xy, Q, R, Dt);
+        [state_t1, P_t1] = EKF(state_t, control_t, obs_t1, P_t, lm_xy, Q, R, Dt);
 
         state_t = state_t1;
         P_t = P_t1;
@@ -158,14 +158,10 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         figure
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
         hold on
-        plot(ekf_loc(:,1), ekf_loc(:,2),'r-.')
+        plot(ekf_loc(:,1), ekf_loc(:,2),'rs')
         title('EKF')
         grid on
-        return
     end   
-
-
-    return
 
     %% Step 4: Write localization file
     if (DEBUG)

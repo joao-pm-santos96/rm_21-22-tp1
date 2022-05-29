@@ -1,11 +1,11 @@
-function [x_t1, P_t1] = MyEKF(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
+function [x_t1, P_t1] = EKF(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
 % x_t: current pose estimate [x y theta]'
 % u_t: current control input [v w]'
 % z_k1: observations after moving to next pose N x [dist ang]
 % P_t: current variance/covariance
 % lm_xy: landmark positions [x y]
-% Q:
-% R:
+% Q: covariance matrix for the process noise
+% R:covariance matrix for the observation noise
     
     %% Defaults
     w_t = [0 0];
