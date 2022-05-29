@@ -100,8 +100,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
         hold on
         vel = control_inputs(:,1);
-        quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)))
+        quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
         grid on
+        title('Velocity vectors')
     end
     %%%%%%%%%%%%%
 
@@ -154,8 +155,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
     if (DEBUG)
         figure
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
-        hold on
-        plot(ekf_loc(:,1), ekf_loc(:,2),'rs')
+        hold on        
+        tmp = 2;
+        quiver(ekf_loc(:,1), ekf_loc(:,2), tmp*cos(ekf_loc(:,3)), tmp*sin(ekf_loc(:,3)), 'off')
         title('EKF')
         grid on
     end   
@@ -187,6 +189,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(smooth_path(:,1), diff_wheels(:,2))
         grid on
         legend('wr', 'wl')
+        title('Differential Drive')
     end
     
     % Tricyle
@@ -206,6 +209,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(smooth_path(:,1), tri_wheels(:,2))
         grid on
         legend('wt', 'alpha')
+        title('Tricycle')
     end
 
     % Omnidirectional drive
@@ -226,6 +230,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         plot(smooth_path(:,1), omni_wheels(:,3))
         grid on
         legend('w1', 'w2', 'w3')
+        title('Omnidirectional')
     end
 
 end
