@@ -124,7 +124,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
     %%%%%%%%%%%%%
 
-    %% Step 3: Extended Kalamn Filter 
+    %% Step 3: Extended Kalman Filter 
     if (DEBUG)
         disp('Step 3')
     end
@@ -138,6 +138,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     ekf_loc = state_t;
     ekf_p = P_t;
 
+    % TODO add try catch
     for n=1:1:size(control_inputs,1)
 
         control_t = control_inputs(n,:);
@@ -156,6 +157,15 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         obs_t1(nan_rows, :) = [];
         lm_xy(nan_rows, :) = [];
         obs_n(nan_rows, :) = [];
+
+        % Deal with collinear landmarks-robot
+        threshold = 0.1;
+        [rows, ~] = find(obs_t1(:,2) > -threshold && obs_t1(:,2) < threshold);
+        coll_rows = unique(rows);
+
+        obs_t1(coll_rows, :) = [];
+        lm_xy(coll_rows, :) = [];
+        obs_n(coll_rows, :) = [];
 
         b_noises = reshape(obs_n',1,[]);
         R = diag(b_noises).^2;
