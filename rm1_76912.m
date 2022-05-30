@@ -27,7 +27,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     DD_FILE = 'DD_76912.txt';
     TRI_FILE = 'TRI_76912.txt';
     OMNI_FILE = 'OMNI_76912.txt';
-    DEBUG = true;
+    DEBUG = true; % TODO set to false!
 
     if (DEBUG)
         close all
