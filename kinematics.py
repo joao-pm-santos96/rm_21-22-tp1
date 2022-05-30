@@ -44,10 +44,6 @@ def DiffDrive():
     frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
 
-    pprint(frw_k)
-    print(octave_code(frw_k))
-    exit()
-
     inv_ks = []
     for i in [0, 1]:
 
@@ -80,7 +76,7 @@ def OmniDrive():
     vels = vels.subs(theta, omega * t)
     frw_k = sym.integrate(vels, (t,0,dt)) + start_pos
     frw_k = sym.simplify(frw_k)
-    
+
     inv_ks = []
     for i in [1]:
 

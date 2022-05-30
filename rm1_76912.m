@@ -104,10 +104,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
     control_inputs(end+1,:) = [0, 0];
 
-    % Add RAND noises
-    % TODO test it!!!
-    % noises_v = randn(size(control_inputs,1),1) .* Vn;
-    % noises_w = randn(size(control_inputs,1),1) .* Wn;
+    % Add RANDN noises
     noises_v = normrnd(0, Vn, [size(control_inputs,1),1]);
     noises_w = normrnd(0, Wn, [size(control_inputs,1),1]);
     control_inputs(:,1) = control_inputs(:,1) + noises_v;
@@ -116,8 +113,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     %%% DEBUG %%%
     if (DEBUG)
         figure
-        plot(smooth_path(:,1),smooth_path(:,2),'g-')
-        hold on
+%         plot(smooth_path(:,1),smooth_path(:,2),'g-')
+%         hold on
         vel = control_inputs(:,1);
         quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
         grid on
@@ -163,7 +160,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         % Deal with collinear landmarks-robot
         % TODO test it (with and without pinv/inv)!!!
         threshold = 0.1;
-        [rows, ~] = find(obs_t1(:,2) > -threshold && obs_t1(:,2) < threshold);
+        [rows, ~] = find(obs_t1(:,2) > -threshold & obs_t1(:,2) < threshold);
         coll_rows = unique(rows);
 
         obs_t1(coll_rows, :) = [];
