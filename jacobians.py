@@ -1,5 +1,4 @@
 # IMPORTS
-from stat import S_ENFMT
 import sympy as sym
 from sympy import pprint, pi
 from sympy.printing.octave import octave_code
