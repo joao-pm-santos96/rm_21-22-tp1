@@ -108,8 +108,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     % TODO test it!!!
     % noises_v = randn(size(control_inputs,1),1) .* Vn;
     % noises_w = randn(size(control_inputs,1),1) .* Wn;
-    noises_v = normrnd(0, Vn);
-    noises_w = normrnd(0, Vw);
+    noises_v = normrnd(0, Vn, [size(control_inputs,1),1]);
+    noises_w = normrnd(0, Wn, [size(control_inputs,1),1]);
     control_inputs(:,1) = control_inputs(:,1) + noises_v;
     control_inputs(:,2) = control_inputs(:,2) + noises_w;
 
@@ -140,6 +140,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     ekf_p = P_t;
 
     % TODO add try catch
+    % TODO add wrapToPi everywhere
     for n=1:1:size(control_inputs,1)
 
         control_t = control_inputs(n,:);
@@ -185,7 +186,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     if (DEBUG)
         figure
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
-        hold on        
+        hold on   
+        plot(known_poses(:,1), known_poses(:,2),'bo')
+        hold on     
         tmp = 2;
         quiver(ekf_loc(:,1), ekf_loc(:,2), tmp*cos(ekf_loc(:,3)), tmp*sin(ekf_loc(:,3)), 'off')
         title('EKF')
@@ -327,7 +330,7 @@ function state_t1 = MotionModel(state_t, input_t, sigma, dt)
     vn = normrnd(0, sigma(1));
     wn = normrnd(0, sigma(2));
 
-    state_t1 = ((T * (input_t + [vn vn wn])') .* dt + state_t')';
+    state_t1 = ((T * (input_t + [vn wn])') .* dt + state_t')';
 
 end
 
