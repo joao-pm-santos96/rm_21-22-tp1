@@ -1,14 +1,14 @@
 function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 % RM1_76912 TP1 de Robotica Movel | 2021-22
-%   João Santos, 76912
+%   Joao Santos, 76912
 %
-%   N: número de faróis (default: 4)
+%   N: numero de farois (default: 4)
 %   Dt: intervalo de tempo de amostragem dos sensores (default: 1s)
 %   r: raio das rodas dos robots (default: 0.15m)
-%   L: separação/afastamento das rodas conforme o modelo cinemático (default: 1m)
+%   L: separacao/afastamento das rodas conforme o modelo cinematico (default: 1m)
 %   Vn: incerteza (sigma) na velocidade linear a impor ao robot (default: 0.1m/s)
-%   Vw: incerteza (sigma) na velocidade angular a impor ao robot (default: 0.1rad/s)
-%   V: velocidade média desejada (default: 5m/s)
+%   Wn: incerteza (sigma) na velocidade angular a impor ao robot (default: 0.1rad/s)
+%   V: velocidade media desejada (default: 5m/s)
 
     %% Default arguments
     arguments
@@ -105,12 +105,13 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     control_inputs(end+1,:) = [0, 0];
 
     % Add RAND noises
+    % TODO test it!!!
     % noises_v = randn(size(control_inputs,1),1) .* Vn;
     % noises_w = randn(size(control_inputs,1),1) .* Wn;
     noises_v = normrnd(0, Vn);
     noises_w = normrnd(0, Vw);
-    control_inputs(:,1) = control_inputs(:,1) + Vn;
-    control_inputs(:,2) = control_inputs(:,2) + Wn;
+    control_inputs(:,1) = control_inputs(:,1) + noises_v;
+    control_inputs(:,2) = control_inputs(:,2) + noises_w;
 
     %%% DEBUG %%%
     if (DEBUG)
@@ -159,6 +160,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         obs_n(nan_rows, :) = [];
 
         % Deal with collinear landmarks-robot
+        % TODO test it (with and without pinv/inv)!!!
         threshold = 0.1;
         [rows, ~] = find(obs_t1(:,2) > -threshold && obs_t1(:,2) < threshold);
         coll_rows = unique(rows);
@@ -196,7 +198,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
     writematrix(ekf_loc, LOC_FILE);
 
-    %% Step 5: Kinematic Models
+    %% Step 5: Inverse Kinematic Models
     if (DEBUG)
         disp('Step 5')
     end
@@ -266,26 +268,29 @@ end
 %% ADDITIONAL FUNCTIONS
 
 function [x_t1, P_t1] = EKF(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
-% x_t: current pose estimate [x y theta]'
-% u_t: current control input [v w]'
-% z_k1: observations after moving to next pose N x [dist ang]
-% P_t: current variance/covariance
-% lm_xy: landmark positions [x y]
-% Q: covariance matrix for the process noise
-% R:covariance matrix for the observation noise
+% EKF Extended Kalman Filter
+%   [x_t1, P_t1] = EKF(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
+%
+%   x_t: current pose estimate [x y theta]
+%   u_t: current control input [v w]
+%   z_k1: observations after moving to next pose N x [dist ang]
+%   P_t: current variance/covariance
+%   lm_xy: landmark positions [x y]
+%   Q: covariance matrix for the process noise
+%   R: covariance matrix for the observation noise
     
     %% Defaults
     w_t = [0 0];
     v_t = [0 0];
 
-    %% Prediction    
+    %% Prediction step
     jfx = Jfx(x_t, u_t, w_t, dt);
     jfw = Jfw(x_t, dt);
 
     x_t1_pred = MotionModel(x_t, u_t, w_t, dt);
     P_t1_pred = jfx * P_t * jfx' + jfw * Q * jfw';  
 
-    %% Update
+    %% Update step
     jh = [];
     for n=1:1:size(lm_xy,1)
         jh = [jh; Jh(x_t1_pred, lm_xy(n,:))];
@@ -319,7 +324,10 @@ function state_t1 = MotionModel(state_t, input_t, sigma, dt)
         sin(state_t(3)) 0
         0 1];
 
-    state_t1 = ((T * (input_t + sigma)') .* dt + state_t')';
+    vn = normrnd(0, sigma(1));
+    wn = normrnd(0, sigma(2));
+
+    state_t1 = ((T * (input_t + [vn vn wn])') .* dt + state_t')';
 
 end
 
@@ -336,11 +344,21 @@ function z = SensorModel(state_t, lm_xy, sigma)
     r = norm(delta);
     phi = atan2(delta(2), delta(1)) - state_t(3);
 
-    z = [r phi] + sigma;
+    rn = normrnd(0, sigma(1));
+    phin = normrnd(0, sigma(2));
+
+    z = [r phi] + [rn phin];
 
 end
 
 function jacob = Jfx(x_t, u_t, w_t, t)
+% Jfx Jacobian (regarding [x y theta]) of the MotionModel
+%   jacob = Jfx(x_t, u_t, w_t, t)
+%
+%   x_t: current pose estimate [x y theta]
+%   u_t: current control input [v w]
+%   w_t: process noise
+%   t: time interval
 
     jacob = [1 0 -t.*(w_t(1) + u_t(1)).*sin(x_t(3))
         0 1 t.*(w_t(1) + u_t(1)).*cos(x_t(3))
@@ -348,13 +366,23 @@ function jacob = Jfx(x_t, u_t, w_t, t)
 end
 
 function jacob = Jfw(x_t, t)
-    
+% Jfw Jacobian (regarding [vn wn]) of the MotionModel
+%   jacob = Jfw(x_t, t)
+%
+%   x_t: current pose estimate [x y theta]
+%   t: time interval
+
     jacob = [t.*cos(x_t(3)) 0
         t.*sin(x_t(3)) 0
         0 t];
 end
 
 function jacob = Jh(x_t1_pred, lm_xy)
+% Jh Jacobian (regarding []) of the SensorModel
+%   jacob = Jh(x_t1_pred, lm_xy)
+%
+%   x_t1_pred: current pose estimate [x y theta]
+%   lm_xy: known landmark positions [x y]
 
     delta = x_t1_pred(1:2) - lm_xy;
 
@@ -373,7 +401,6 @@ end
 function inv_k = DiffDriveIK(R, L, start_pos, end_pos, dt)
 % DiffDriveIK Inverse Kinematics for the Differential Drive robot
 %   inv_k = DiffDriveIK(R, L, start_pos, end_pos, dt)
-%   RESTRICTION: wl ~= wr
 %
 %   R: wheel radius
 %   L: wheel base
@@ -402,7 +429,6 @@ end
 function inv_k = OmniDriveIK(R, L, start_pos, end_pos, dt)
 % OmniDriveIK Inverse Kinematics for the Omnidirectional robot
 %   inv_k = OmniDriveIK(R, L, start_pos, end_pos, dt)
-%   RESTRICTION: w1 ~= -w2 + w3
 %
 %   R: wheel radius
 %   L: wheel base
@@ -427,7 +453,6 @@ end
 function inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
 % TricycleIK Inverse Kinematics for the Tricyle robot
 %   inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
-%   RESTRICTION: wt ~= 0 & alpha ~= 0
 %
 %   R: wheel radius
 %   L: wheel base
