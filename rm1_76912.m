@@ -1,14 +1,24 @@
-function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
+function rm1_76912(N, Dt, r, L, Vn, Wn, V)
+% RM1_76912 TP1 de Robotica Movel | 2021-22
+%   João Santos, 76912
+%
+%   N: número de faróis (default: 4)
+%   Dt: intervalo de tempo de amostragem dos sensores (default: 1s)
+%   r: raio das rodas dos robots (default: 0.15m)
+%   L: separação/afastamento das rodas conforme o modelo cinemático (default: 1m)
+%   Vn: incerteza (sigma) na velocidade linear a impor ao robot (default: 0.1m/s)
+%   Vw: incerteza (sigma) na velocidade angular a impor ao robot (default: 0.1rad/s)
+%   V: velocidade média desejada (default: 5m/s)
 
     %% Default arguments
     arguments
-        N = 4
-        Dt = 1
-        r = 0.15
+        N = 4 
+        Dt = 1 
+        r = 0.15 
         L = 1
         Vn = 0.1
         Wn = 0.1
-        vel = 5
+        V = 5
     end
 
     %% Constants 
@@ -44,7 +54,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         d = norm(p1-p0);
         
         % Get n points
-        n_points = round(d / (vel * Dt));
+        n_points = round(d / (V * Dt));
 
         deltas = (1:1:n_points)/n_points;
         step_poses = p0+deltas'*(p1-p0);
@@ -93,6 +103,14 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, vel)
         control_inputs = [control_inputs; [lin_vel, ang_vel]];
     end
     control_inputs(end+1,:) = [0, 0];
+
+    % Add RAND noises
+    % noises_v = randn(size(control_inputs,1),1) .* Vn;
+    % noises_w = randn(size(control_inputs,1),1) .* Wn;
+    noises_v = normrnd(0, Vn);
+    noises_w = normrnd(0, Vw);
+    control_inputs(:,1) = control_inputs(:,1) + Vn;
+    control_inputs(:,2) = control_inputs(:,2) + Wn;
 
     %%% DEBUG %%%
     if (DEBUG)
