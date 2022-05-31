@@ -87,7 +87,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         title('Path')
         xlabel('X [m]')
         ylabel('Y [m]')
-        legend show
+        legend(Location='southoutside', Orientation='horizontal')
     end
     %%%%%%%%%%%%%
 
@@ -208,7 +208,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         title('EKF')
         xlabel('X [m]')
         ylabel('Y [m]')
-        legend show
+        legend(Location='southoutside', Orientation='horizontal')
 
         figure
         samples = 2;
@@ -239,8 +239,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         title('Detections')
         xlabel('X [m]')
         ylabel('Y [m]')
-        legend show
-        legend show
+        legend(Location='southoutside', Orientation='horizontal')
         grid on
     end   
 
@@ -266,11 +265,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), diff_wheels(:,1), DisplayName='Right wheel speed') 
+        plot(smooth_path(:,1), diff_wheels(:,1), DisplayName='Right wheel') 
         hold on
-        plot(smooth_path(:,1), diff_wheels(:,2), DisplayName='Left wheel speed')
+        plot(smooth_path(:,1), diff_wheels(:,2), DisplayName='Left wheel')
         grid on
-        legend show
+        legend(Location='southoutside', Orientation='horizontal')
         title('Differential Drive')
         xlabel('X [m]')
         ylabel('Rotation speed [rad/s]')
@@ -287,14 +286,14 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), tri_wheels(:,1), DisplayName='Wheel speed') 
+        plot(smooth_path(:,1), tri_wheels(:,1), DisplayName='Traction wheel') 
         hold on
         ylabel('Rotation speed [rad/s]')
         yyaxis right
         ylabel('Steering angle [rad]')
-        plot(smooth_path(:,1), tri_wheels(:,2), DisplayName='Steering angle')
+        plot(smooth_path(:,1), tri_wheels(:,2), DisplayName='Steering')
         grid on
-        legend show
+        legend(Location='southoutside', Orientation='horizontal')
         title('Tricycle')
         xlabel('X [m]')
     end
@@ -311,13 +310,13 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), omni_wheels(:,1), DisplayName='Wheel 1 speed') 
+        plot(smooth_path(:,1), omni_wheels(:,1), DisplayName='Wheel 1') 
         hold on
-        plot(smooth_path(:,1), omni_wheels(:,2), DisplayName='Wheel 2 speed') 
+        plot(smooth_path(:,1), omni_wheels(:,2), DisplayName='Wheel 2') 
         hold on
-        plot(smooth_path(:,1), omni_wheels(:,3), DisplayName='Wheel 3 speed') 
+        plot(smooth_path(:,1), omni_wheels(:,3), DisplayName='Wheel 3') 
         grid on
-        legend show
+        legend(Location='southoutside', Orientation='horizontal')
         title('Omnidirectional')
         xlabel('X [m]')
         ylabel('Rotation speed [rad/s]')
