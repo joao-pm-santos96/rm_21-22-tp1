@@ -85,6 +85,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         plot(smooth_path(:,1),smooth_path(:,2),'g-')
         grid on
         title('Path')
+        xlabel('X [m]')
+        ylabel('Y [m]')
     end
     %%%%%%%%%%%%%
 
@@ -119,6 +121,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
         grid on
         title('Velocity vectors')
+        xlabel('X [m]')
+        ylabel('Y [m]')
     end
     %%%%%%%%%%%%%
 
@@ -188,8 +192,10 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         hold on     
         tmp = 2;
         quiver(ekf_loc(:,1), ekf_loc(:,2), tmp*cos(ekf_loc(:,3)), tmp*sin(ekf_loc(:,3)), 'off')
-        title('EKF')
         grid on
+        title('EKF')
+        xlabel('X [m]')
+        ylabel('Y [m]')
     end   
 
     %% Step 4: Write localization file
@@ -220,6 +226,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         grid on
         legend('wr', 'wl')
         title('Differential Drive')
+        xlabel('X [m]')
+        ylabel('Rotation speed [rad/s]')
     end
     
     % Tricyle
@@ -235,11 +243,14 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         figure
         plot(smooth_path(:,1), tri_wheels(:,1)) 
         hold on
+        ylabel('Rotation speed [rad/s]')
         yyaxis right
+        ylabel('Steering angle [rad]')
         plot(smooth_path(:,1), tri_wheels(:,2))
         grid on
         legend('wt', 'alpha')
         title('Tricycle')
+        xlabel('X [m]')
     end
 
     % Omnidirectional drive
@@ -261,6 +272,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         grid on
         legend('w1', 'w2', 'w3')
         title('Omnidirectional')
+        xlabel('X [m]')
+        ylabel('Rotation speed [rad/s]')
     end
 
 end
@@ -477,5 +490,4 @@ function inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
     end
 
 end
-
 
