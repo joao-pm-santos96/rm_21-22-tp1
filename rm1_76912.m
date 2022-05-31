@@ -78,15 +78,16 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     %%% DEGUB %%%
     if (DEBUG)
         figure
-        plot(known_poses(:,1), known_poses(:,2),'bo')
+        plot(known_poses(:,1), known_poses(:,2),'bo', DisplayName='Beacons')
         hold on
-        plot(known_poses(:,1), known_poses(:,2),'r--')
+        plot(known_poses(:,1), known_poses(:,2),'r--', DisplayName='Linear path')
         hold on
-        plot(smooth_path(:,1),smooth_path(:,2),'g-')
+        plot(smooth_path(:,1),smooth_path(:,2),'g-', DisplayName='Smooth path')
         grid on
         title('Path')
         xlabel('X [m]')
         ylabel('Y [m]')
+        legend show
     end
     %%%%%%%%%%%%%
 
@@ -140,6 +141,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     ekf_loc = state_t;
     ekf_p = P_t;
 
+    ekf_obs = {};
+    ekf_obs_pos = {};
+
     % TODO add try catch
     % TODO add wrapToPi everywhere
     for n=1:1:size(control_inputs,1)
@@ -147,6 +151,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         control_t = control_inputs(n,:);
         state_t1 = MotionModel(state_t, control_t, [0 0], Dt);
         
+        state_t1(3) = wrapToPi(state_t1(3));        
         B = BeaconDetection(N, state_t1);
         
         obs_t1 = [B(:).d; B(:).a]';
@@ -163,13 +168,16 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
         % Deal with collinear landmarks-robot
         % TODO test it (with and without pinv/inv)!!!
-        threshold = 0.1;
-        [rows, ~] = find(obs_t1(:,2) > -threshold & obs_t1(:,2) < threshold);
-        coll_rows = unique(rows);
+%         threshold = 0.1;
+%         [rows, ~] = find(obs_t1(:,2) > -threshold & obs_t1(:,2) < threshold);
+%         coll_rows = unique(rows);
+% 
+%         obs_t1(coll_rows, :) = [];
+%         lm_xy(coll_rows, :) = [];
+%         obs_n(coll_rows, :) = [];
 
-        obs_t1(coll_rows, :) = [];
-        lm_xy(coll_rows, :) = [];
-        obs_n(coll_rows, :) = [];
+        ekf_obs{end+1} = obs_t1;
+        ekf_obs_pos{end+1} = state_t1;
 
         b_noises = reshape(obs_n',1,[]);
         R = diag(b_noises).^2;
@@ -178,24 +186,57 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
         state_t = state_t1;
         P_t = P_t1;
-
-        ekf_loc = [ekf_loc; state_t];
-        ekf_p = [ekf_p; P_t];       
+        
+        ekf_loc(:,:,end+1) = state_t;
+        ekf_p(:,:,end+1) = P_t;         
 
     end
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1),smooth_path(:,2),'g-')
+        plot(smooth_path(:,1),smooth_path(:,2),'g-', DisplayName='Planned path')
         hold on   
-        plot(known_poses(:,1), known_poses(:,2),'bo')
+        plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Beacons')
         hold on     
         tmp = 2;
-        quiver(ekf_loc(:,1), ekf_loc(:,2), tmp*cos(ekf_loc(:,3)), tmp*sin(ekf_loc(:,3)), 'off')
+        quiver(ekf_loc(:,1,:), ekf_loc(:,2,:), tmp*cos(ekf_loc(:,3,:)), tmp*sin(ekf_loc(:,3,:)), 'off', DisplayName='Estimated pose')
         grid on
         title('EKF')
         xlabel('X [m]')
         ylabel('Y [m]')
+        legend show
+
+        figure
+        samples = 2;
+        ids = randsample(size(ekf_obs,2), samples);
+        
+        plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Beacons')
+        hold on
+
+        for i=1:1:samples
+            q_sz = ekf_obs{ids(i)}(:,1);
+            q_ang = ekf_obs{ids(i)}(:,2);
+            q_loc = ekf_obs_pos{ids(i)};
+            
+            in1 = ones(size(q_sz,1),1) .* q_loc(1);
+            in2 = ones(size(q_sz,1),1) .* q_loc(2);
+
+            in3 = q_sz .* cos(q_ang + q_loc(3));
+            in4 = q_sz .* sin(q_ang + q_loc(3));
+            
+            plot(q_loc(1), q_loc(2), 'd', DisplayName=['Position ',num2str(i)])
+            hold on
+            quiver(in1, in2, in3, in4, 'off', DisplayName=['Detections ',num2str(i)])
+            hold on
+
+        end
+
+        title('Detections')
+        xlabel('X [m]')
+        ylabel('Y [m]')
+        legend show
+        legend show
+        grid on
     end   
 
     %% Step 4: Write localization file
@@ -220,11 +261,11 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), diff_wheels(:,1)) 
+        plot(smooth_path(:,1), diff_wheels(:,1), DisplayName='Right wheel speed') 
         hold on
-        plot(smooth_path(:,1), diff_wheels(:,2))
+        plot(smooth_path(:,1), diff_wheels(:,2), DisplayName='Left wheel speed')
         grid on
-        legend('wr', 'wl')
+        legend show
         title('Differential Drive')
         xlabel('X [m]')
         ylabel('Rotation speed [rad/s]')
@@ -241,14 +282,14 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), tri_wheels(:,1)) 
+        plot(smooth_path(:,1), tri_wheels(:,1), DisplayName='Wheel speed') 
         hold on
         ylabel('Rotation speed [rad/s]')
         yyaxis right
         ylabel('Steering angle [rad]')
-        plot(smooth_path(:,1), tri_wheels(:,2))
+        plot(smooth_path(:,1), tri_wheels(:,2), DisplayName='Steering angle')
         grid on
-        legend('wt', 'alpha')
+        legend show
         title('Tricycle')
         xlabel('X [m]')
     end
@@ -264,13 +305,13 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     if (DEBUG)
         figure
-        plot(smooth_path(:,1), omni_wheels(:,1)) 
+        plot(smooth_path(:,1), omni_wheels(:,1), DisplayName='Wheel 1 speed') 
         hold on
-        plot(smooth_path(:,1), omni_wheels(:,2))
+        plot(smooth_path(:,1), omni_wheels(:,2), DisplayName='Wheel 2 speed') 
         hold on
-        plot(smooth_path(:,1), omni_wheels(:,3))
+        plot(smooth_path(:,1), omni_wheels(:,3), DisplayName='Wheel 3 speed') 
         grid on
-        legend('w1', 'w2', 'w3')
+        legend show
         title('Omnidirectional')
         xlabel('X [m]')
         ylabel('Rotation speed [rad/s]')
