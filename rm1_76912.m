@@ -66,12 +66,12 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     smooth_path = [all_poses(:,1), yq];
 
     % Get smooth path orientations
-    orients = INITIAL_POSE(3); 
+    orients = zeros(size(smooth_path,1),1);
     for n=2:1:size(smooth_path,1)
         p0 = smooth_path(n-1,:);
         p1 = smooth_path(n,:);
         v = p1 - p0;
-        orients = [orients; atan2(v(2),v(1))];
+        orients(n,1) = atan2(v(2),v(1));
     end
     smooth_path(:,3) = orients;
     
@@ -96,16 +96,16 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         disp('Step 2')
     end
 
-    control_inputs = []; 
+    control_inputs = zeros(size(smooth_path,1),2);
     for n=1:1:size(smooth_path,1)-1
         p0 = smooth_path(n,:);
         p1 = smooth_path(n+1,:);
         v = p1 - p0;
         lin_vel = norm(v(1:2)) / Dt;
         ang_vel = v(3) / Dt;
-        control_inputs = [control_inputs; [lin_vel, ang_vel]];
+        control_inputs(n,:) = [lin_vel, ang_vel];
     end
-    control_inputs(end+1,:) = [0, 0];
+    control_inputs(end,:) = [0, 0];
 
     % Add RANDN noises
     noises_v = normrnd(0, Vn, [size(control_inputs,1),1]);
@@ -116,8 +116,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     %%% DEBUG %%%
     if (DEBUG)
         figure
-%         plot(smooth_path(:,1),smooth_path(:,2),'g-')
-%         hold on
         vel = control_inputs(:,1);
         quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
         grid on
@@ -138,11 +136,15 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     Q = [Vn^2 0
         0 Wn^2];
 
-    ekf_loc = state_t;
-    ekf_p = P_t;
+    ekf_loc = zeros(size(control_inputs,1)+1,3);
+    ekf_loc(1,:) = state_t;
 
-    ekf_obs = {};
-    ekf_obs_pos = {};
+    ekf_p = zeros(3,3,size(control_inputs,1)+1);
+    ekf_p(:,:,1) = P_t;
+
+    ekf_obs = cell(size(control_inputs,1));
+
+    ekf_obs_pos = cell(size(control_inputs,1));
 
     % TODO add try catch
     % TODO add wrapToPi everywhere
@@ -176,8 +178,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 %         lm_xy(coll_rows, :) = [];
 %         obs_n(coll_rows, :) = [];
 
-        ekf_obs{end+1} = obs_t1;
-        ekf_obs_pos{end+1} = state_t1;
+        ekf_obs{n} = obs_t1;
+
+        ekf_obs_pos{n} = state_t1;
 
         b_noises = reshape(obs_n',1,[]);
         R = diag(b_noises).^2;
@@ -187,8 +190,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         state_t = state_t1;
         P_t = P_t1;
         
-        ekf_loc = [ekf_loc; state_t];
-        ekf_p(:,:,end+1) = P_t;         
+        ekf_loc(n+1,:) = state_t;
+         
+        ekf_p(:,:,n+1) = P_t;
 
     end
 
@@ -252,12 +256,12 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
 
     % Differential drive
-    diff_wheels = [];
+    diff_wheels = zeros(size(smooth_path,1), 2);
     for n=1:1:size(smooth_path,1)-1
         wheels = DiffDriveIK(r, L, smooth_path(n,:), smooth_path(n+1,:), Dt); 
-        diff_wheels = [diff_wheels; [wheels.wr wheels.wl]]; 
+        diff_wheels(n,:) = [wheels.wr wheels.wl]; 
     end
-    diff_wheels(end+1,:) = zeros(1, size(diff_wheels, 2)); % TODO should end in vles=0?
+    diff_wheels(end,:) = zeros(1, size(diff_wheels, 2)); % TODO should end in vles=0?
     writematrix(diff_wheels, DD_FILE);
 
     if (DEBUG)
@@ -273,12 +277,12 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
     
     % Tricyle
-    tri_wheels = [];
+    tri_wheels = zeros(size(smooth_path,1),2);
     for n=1:1:size(smooth_path,1)-1
         wheels = TricycleIK(r, L, smooth_path(n,:), smooth_path(n+1,:), Dt); 
-        tri_wheels = [tri_wheels; [wheels.wt wheels.alpha]];     
+        tri_wheels(n,:) = [wheels.wt wheels.alpha];
     end
-    tri_wheels(end+1,:) = zeros(1, size(tri_wheels, 2)); % TODO should end in vles=0?
+    tri_wheels(end,:) = zeros(1, size(tri_wheels, 2)); % TODO should end in vles=0?
     writematrix(tri_wheels, TRI_FILE);
 
     if (DEBUG)
@@ -296,12 +300,13 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
 
     % Omnidirectional drive
-    omni_wheels = [];
+
+    omni_wheels = zeros(size(smooth_path,1), 3);
     for n=1:1:size(smooth_path,1)-1
         wheels = OmniDriveIK(r, L, smooth_path(n,:), smooth_path(n+1,:), Dt); 
-        omni_wheels = [omni_wheels; [wheels.w1 wheels.w2 wheels.w3]];     
+        omni_wheels(n,:) = [wheels.w1 wheels.w2 wheels.w3];
     end
-    omni_wheels(end+1,:) = zeros(1, size(omni_wheels, 2)); % TODO should end in vles=0?
+    omni_wheels(end,:) = zeros(1, size(omni_wheels, 2)); % TODO should end in vles=0?
     writematrix(omni_wheels, OMNI_FILE);
 
     if (DEBUG)
@@ -346,15 +351,15 @@ function [x_t1, P_t1] = EKF(x_t, u_t, z_t1, P_t, lm_xy, Q, R, dt)
     P_t1_pred = jfx * P_t * jfx' + jfw * Q * jfw';  
 
     %% Update step
-    jh = [];
+    jh = zeros(2 * size(lm_xy,1), 3);
     for n=1:1:size(lm_xy,1)
-        jh = [jh; Jh(x_t1_pred, lm_xy(n,:))];
+        jh(2*n-1:2*n,:) = Jh(x_t1_pred, lm_xy(n,:));
     end
 
     z_all = reshape(z_t1', [], 1);
-    z_pred = [];
+    z_pred = zeros(2 * size(lm_xy,1), 1);
     for n=1:1:size(lm_xy,1)
-        z_pred = [z_pred; SensorModel(x_t1_pred, lm_xy(n,:), v_t)'];
+        z_pred(2*n-1:2*n,:) = SensorModel(x_t1_pred, lm_xy(n,:), v_t)';
     end
     innov = z_all - z_pred;
 
@@ -471,8 +476,7 @@ function inv_k = DiffDriveIK(R, L, start_pos, end_pos, dt)
     % Y = end_pos(2);
     TH = end_pos(3);
 
-%     if ((TH - TH0) ~= 0)
-    if (abs(TH - TH0) >= 0.001)
+    if (abs(TH - TH0) >= 1e-3)
         inv_k.wl = (-L.*TH.*sin(TH - TH0)/2 + L.*TH0.*sin(TH - TH0)/2 + TH.*X - TH.*X0 - TH0.*X + TH0.*X0)./(R.*dt.*sin(TH - TH0));
         inv_k.wr = (L.*(TH - TH0).*sin(TH - TH0)/2 + TH.*X - TH.*X0 - TH0.*X + TH0.*X0)./(R.*dt.*sin(TH - TH0));
     else
@@ -525,8 +529,7 @@ function inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
     % Y = end_pos(2);
     TH = end_pos(3);
 
-%     if ((X - X0 ~= 0) && (TH - TH0 ~= 0))
-    if ((abs(X - X0) > 0.001) && (abs(TH - TH0) > 0.001))
+    if ((abs(X - X0) > 1e-3) && (abs(TH - TH0) > 1e-3))
         inv_k.alpha = atan(L.*sin(TH - TH0)./(X - X0));
         inv_k.wt = (TH - TH0).*(X - X0)./(R.*dt.*sin(TH - TH0));
     else
