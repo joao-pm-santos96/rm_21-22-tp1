@@ -187,7 +187,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         state_t = state_t1;
         P_t = P_t1;
         
-        ekf_loc(:,:,end+1) = state_t;
+        ekf_loc = [ekf_loc; state_t];
         ekf_p(:,:,end+1) = P_t;         
 
     end
@@ -208,7 +208,8 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
         figure
         samples = 2;
-        ids = randsample(size(ekf_obs,2), samples);
+%         ids = randsample(size(ekf_obs,2), samples);
+        ids = [5 size(ekf_obs,2)-5];
         
         plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Beacons')
         hold on
@@ -470,7 +471,8 @@ function inv_k = DiffDriveIK(R, L, start_pos, end_pos, dt)
     % Y = end_pos(2);
     TH = end_pos(3);
 
-    if ((TH - TH0) ~= 0)
+%     if ((TH - TH0) ~= 0)
+    if (abs(TH - TH0) >= 0.001)
         inv_k.wl = (-L.*TH.*sin(TH - TH0)/2 + L.*TH0.*sin(TH - TH0)/2 + TH.*X - TH.*X0 - TH0.*X + TH0.*X0)./(R.*dt.*sin(TH - TH0));
         inv_k.wr = (L.*(TH - TH0).*sin(TH - TH0)/2 + TH.*X - TH.*X0 - TH0.*X + TH0.*X0)./(R.*dt.*sin(TH - TH0));
     else
@@ -483,6 +485,7 @@ end
 function inv_k = OmniDriveIK(R, L, start_pos, end_pos, dt)
 % OmniDriveIK Inverse Kinematics for the Omnidirectional robot
 %   inv_k = OmniDriveIK(R, L, start_pos, end_pos, dt)
+%   RESTRICTION: w1 = -w2 + w3
 %
 %   R: wheel radius
 %   L: wheel base
@@ -522,7 +525,8 @@ function inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
     % Y = end_pos(2);
     TH = end_pos(3);
 
-    if ((X - X0 ~= 0) && (TH - TH0 ~= 0))
+%     if ((X - X0 ~= 0) && (TH - TH0 ~= 0))
+    if ((abs(X - X0) > 0.001) && (abs(TH - TH0) > 0.001))
         inv_k.alpha = atan(L.*sin(TH - TH0)./(X - X0));
         inv_k.wt = (TH - TH0).*(X - X0)./(R.*dt.*sin(TH - TH0));
     else
