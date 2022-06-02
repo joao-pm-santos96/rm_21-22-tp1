@@ -529,10 +529,10 @@ function inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
     TH = end_pos(3);
 
     if ((abs(X - X0) > 1e-3) && (abs(TH - TH0) > 1e-3))
-        inv_k.alpha = atan(L.*sin(TH - TH0)./(X - X0));
+        inv_k.alpha = atan2(L.*sin(TH - TH0),(X - X0));
         inv_k.wt = (TH - TH0).*(X - X0)./(R.*dt.*sin(TH - TH0));
     else
-        inv_k.alpha = atan(L.*(TH - TH0)./(X - X0));
+        inv_k.alpha = atan2(L.*(TH - TH0),(X - X0));
         inv_k.wt = (X - X0)./(R.*dt);
     end
 
