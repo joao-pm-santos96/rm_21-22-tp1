@@ -123,21 +123,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     control_inputs(:,2) = control_inputs(:,2) + noises_w;
 
     %%% DEBUG %%%
-%     if (DEBUG)
-%         fig = figure;
-%         fig.Position = FIG_POS;
-%         vel = control_inputs(:,1);
-%         quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
-%         grid on
-%         title('Velocidades')
-%         xlabel('X [m]')
-%         ylabel('Y [m]')
-%         axis(FIG_AXIS)
-% 
-%         if (SAVE_FIGS)
-%             exportgraphics(fig,'figs/velocities.pdf')
-%         end
-%     end
     if (DEBUG)
         fig = figure;
         fig.Position = FIG_POS;
@@ -267,13 +252,14 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
         real_state = INITIAL_POSE;
         for i=1:1:size(control_inputs,1)
             state = MotionModel(real_state(end,:), control_inputs(i,:), [Vn Wn], Dt);
-            real_state = [real_state; state];
+            real_state = [real_state; state]; 
         end
 
         quiver(real_state(:,1), real_state(:,2), 2*cos(real_state(:,3)), 2*sin(real_state(:,3)), 'off', DisplayName='Pose real')
         hold on
         quiver(ekf_loc(:,1), ekf_loc(:,2), 2*cos(ekf_loc(:,3)), 2*sin(ekf_loc(:,3)), 'off', DisplayName='Pose estimada')
-
+        hold on
+        
         title('Pose real vs. pose estimada')
         xlabel('X [m]')
         ylabel('Y [m]')
@@ -644,3 +630,21 @@ function inv_k = TricycleIK(R, L, start_pos, end_pos, dt)
 
 end
 
+function elli = ellipse(pose, P)   
+% ELLIPSE: Obtem uma elipse a partir da matriz de covariancia
+%
+%   pose: posição onde desenhar ellipse
+%   P: matrix 2x2 da covariancia
+%
+%   Basedo em https://github.com/UTS-CAS/Robot-Localization-examples/blob/master/GetCov.m
+
+    n_points = 100;
+    elli = zeros(n_points,2);
+    ang = linspace(0, 2*pi, n_points);
+
+    r = real(sqrtm(P));
+    for t=1:1:length(ang)
+        q = ang(t);
+        elli(t,:) = (r*[cos(q); sin(q)]+pose(1:2)')'; 
+    end
+end
