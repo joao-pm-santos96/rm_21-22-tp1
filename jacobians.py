@@ -46,11 +46,11 @@ print()
 
 
 
-x_l = sym.Symbol('x_l', real=True)
-y_l = sym.Symbol('y_l', real=True)
-x_k1 = sym.Symbol('x_k1', real=True)
-y_k1 = sym.Symbol('y_k1', real=True)
-theta_k1 = sym.Symbol('theta_k1', real=True)
+x_l = sym.Symbol('x_L', real=True)
+y_l = sym.Symbol('y_L', real=True)
+x_k1 = sym.Symbol('x_k+1', real=True)
+y_k1 = sym.Symbol('y_k+1', real=True)
+theta_k1 = sym.Symbol('theta_k+1', real=True)
 omega_r = sym.Symbol('omega_r', real=True)
 omega_phi = sym.Symbol('omega_phi', real=True)
 
@@ -62,7 +62,12 @@ E = sym.Matrix([x_k1, y_k1, theta_k1])
 
 print('Jh')
 Jh = D.jacobian(E)
+Jh = sym.simplify(Jh)
 pprint(Jh)
-print(octave_code(Jh))
+print(latex(Jh))
 
+
+# pprint(sym.simplify(Jh))
+# print('='*20)
+# pprint(sym.separatevars(Jh))
 
