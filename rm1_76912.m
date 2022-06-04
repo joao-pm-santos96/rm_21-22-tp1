@@ -263,6 +263,30 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
         fig = figure;
         fig.Position = FIG_POS;
+
+        real_state = INITIAL_POSE;
+        for i=1:1:size(control_inputs,1)
+            state = MotionModel(real_state(end,:), control_inputs(i,:), [Vn Wn], Dt);
+            real_state = [real_state; state];
+        end
+
+        quiver(real_state(:,1), real_state(:,2), 2*cos(real_state(:,3)), 2*sin(real_state(:,3)), 'off', DisplayName='Pose real')
+        hold on
+        quiver(ekf_loc(:,1), ekf_loc(:,2), 2*cos(ekf_loc(:,3)), 2*sin(ekf_loc(:,3)), 'off', DisplayName='Pose estimada')
+
+        title('Pose real vs. pose estimada')
+        xlabel('X [m]')
+        ylabel('Y [m]')
+        legend(Location='southoutside', Orientation='horizontal')
+        grid on
+        axis(FIG_AXIS)
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/pose_compare.pdf')
+        end
+
+        fig = figure;
+        fig.Position = FIG_POS;
         samples = 2;
 %         ids = randsample(size(ekf_obs,2), samples);
         ids = [5 size(ekf_obs,2)-5];
