@@ -28,6 +28,9 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     TRI_FILE = 'TRI_76912.txt';
     OMNI_FILE = 'OMNI_76912.txt';
     DEBUG = true; % TODO set to false!
+    SAVE_FIGS = true;
+    FIG_AXIS = [-25 350 -10 160];
+    FIG_POS = [500,300,660,420];
 
     if (DEBUG)
         close all
@@ -77,17 +80,23 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     
     %%% DEGUB %%%
     if (DEBUG)
-        figure
-        plot(known_poses(:,1), known_poses(:,2),'bo', DisplayName='Beacons')
+        fig = figure;
+        fig.Position = FIG_POS;
+        plot(known_poses(:,1), known_poses(:,2),'bo', DisplayName='Faróis')
         hold on
-        plot(known_poses(:,1), known_poses(:,2),'r--', DisplayName='Linear path')
+        plot(known_poses(:,1), known_poses(:,2),'r--', DisplayName='Trajectória linear')
         hold on
-        plot(smooth_path(:,1),smooth_path(:,2),'g-', DisplayName='Smooth path')
+        plot(smooth_path(:,1),smooth_path(:,2),'g-', DisplayName='Trajectória suave')
         grid on
-        title('Path')
+        title('Trajectórias')
         xlabel('X [m]')
         ylabel('Y [m]')
         legend(Location='southoutside', Orientation='horizontal')
+        axis(FIG_AXIS)
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/trajectories.pdf')
+        end
     end
     %%%%%%%%%%%%%
 
@@ -114,14 +123,50 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     control_inputs(:,2) = control_inputs(:,2) + noises_w;
 
     %%% DEBUG %%%
+%     if (DEBUG)
+%         fig = figure;
+%         fig.Position = FIG_POS;
+%         vel = control_inputs(:,1);
+%         quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
+%         grid on
+%         title('Velocidades')
+%         xlabel('X [m]')
+%         ylabel('Y [m]')
+%         axis(FIG_AXIS)
+% 
+%         if (SAVE_FIGS)
+%             exportgraphics(fig,'figs/velocities.pdf')
+%         end
+%     end
     if (DEBUG)
-        figure
-        vel = control_inputs(:,1);
-        quiver(smooth_path(:,1), smooth_path(:,2), vel.*cos(smooth_path(:,3)), vel.*sin(smooth_path(:,3)), 'off')
+        fig = figure;
+        fig.Position = FIG_POS;
+
+
+        cmap = parula(100);  
+
+        vel_norm = (control_inputs(:,1)-min(control_inputs(:,1)))./range(control_inputs(:,1));
+        vel_color = round(vel_norm * (size(cmap,1)-1)) + 1; 
+            
+        for i=1:1:size(smooth_path,1)
+            vel = control_inputs(i,1);
+            quiver(smooth_path(i,1), smooth_path(i,2), vel.*cos(smooth_path(i,3)), vel.*sin(smooth_path(i,3)), 'off', 'Color', cmap(vel_color(i),:))
+            hold on
+        end
+
+        h = colorbar('southoutside');
+        ylabel(h, '[m/s]')
+        caxis([min(control_inputs(:,1)) max(control_inputs(:,1))])
+
         grid on
-        title('Velocity vectors')
+        title('Velocidades')
         xlabel('X [m]')
         ylabel('Y [m]')
+        axis(FIG_AXIS)
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/velocities.pdf')
+        end
     end
     %%%%%%%%%%%%%
 
@@ -197,25 +242,32 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     end
 
     if (DEBUG)
-        figure
-        plot(smooth_path(:,1),smooth_path(:,2),'g-', DisplayName='Planned path')
+        fig = figure;
+        fig.Position = FIG_POS;
+        plot(smooth_path(:,1),smooth_path(:,2),'g-', DisplayName='Trajectória planeada')
         hold on   
-        plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Beacons')
+        plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Faróis')
         hold on     
         tmp = 2;
-        quiver(ekf_loc(:,1,:), ekf_loc(:,2,:), tmp*cos(ekf_loc(:,3,:)), tmp*sin(ekf_loc(:,3,:)), 'off', DisplayName='Estimated pose')
+        quiver(ekf_loc(:,1,:), ekf_loc(:,2,:), tmp*cos(ekf_loc(:,3,:)), tmp*sin(ekf_loc(:,3,:)), 'off', DisplayName='Pose estimada')
         grid on
         title('EKF')
         xlabel('X [m]')
         ylabel('Y [m]')
         legend(Location='southoutside', Orientation='horizontal')
+        axis(FIG_AXIS)
 
-        figure
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/ekf.pdf')
+        end
+
+        fig = figure;
+        fig.Position = FIG_POS;
         samples = 2;
 %         ids = randsample(size(ekf_obs,2), samples);
         ids = [5 size(ekf_obs,2)-5];
         
-        plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Beacons')
+        plot(beacon_poses(:,1), beacon_poses(:,2),'bo', DisplayName='Faróis')
         hold on
 
         for i=1:1:samples
@@ -229,18 +281,23 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
             in3 = q_sz .* cos(q_ang + q_loc(3));
             in4 = q_sz .* sin(q_ang + q_loc(3));
             
-            plot(q_loc(1), q_loc(2), 'd', DisplayName=['Position ',num2str(i)])
+            plot(q_loc(1), q_loc(2), 'd', DisplayName=['Posição ',num2str(i)])
             hold on
-            quiver(in1, in2, in3, in4, 'off', DisplayName=['Detections ',num2str(i)])
+            quiver(in1, in2, in3, in4, 'off', DisplayName=['Deteções ',num2str(i)])
             hold on
 
         end
 
-        title('Detections')
+        title('Deteções')
         xlabel('X [m]')
         ylabel('Y [m]')
         legend(Location='southoutside', Orientation='horizontal')
         grid on
+        axis(FIG_AXIS)
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/detections.pdf')
+        end
     end   
 
     %% Step 4: Write localization file
@@ -264,15 +321,22 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     writematrix(diff_wheels, DD_FILE);
 
     if (DEBUG)
-        figure
-        plot(smooth_path(:,1), diff_wheels(:,1), DisplayName='Right wheel') 
+        fig = figure;
+        fig.Position = FIG_POS;
+
+        plot(smooth_path(:,1), diff_wheels(:,1), DisplayName='Roda direita (\omega_R)') 
         hold on
-        plot(smooth_path(:,1), diff_wheels(:,2), DisplayName='Left wheel')
+        plot(smooth_path(:,1), diff_wheels(:,2), DisplayName='Roda esquerda (\omega_L)')
         grid on
         legend(Location='southoutside', Orientation='horizontal')
-        title('Differential Drive')
+        title('Tração diferencial')
         xlabel('X [m]')
-        ylabel('Rotation speed [rad/s]')
+        ylabel('Velocidade angular [rad/s]')
+        xlim(FIG_AXIS(1:2))
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/diff_wheels.pdf')
+        end
     end
     
     % Tricyle
@@ -285,17 +349,28 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     writematrix(tri_wheels, TRI_FILE);
 
     if (DEBUG)
-        figure
-        plot(smooth_path(:,1), tri_wheels(:,1), DisplayName='Traction wheel') 
+        fig = figure;
+        fig.Position = FIG_POS;
+        
+        yyaxis left
+        plot(smooth_path(:,1), tri_wheels(:,1), DisplayName='Roda de tração (\omega)') 
+        ylabel('Velocidade angular [rad/s]')
         hold on
-        ylabel('Rotation speed [rad/s]')
+
         yyaxis right
-        ylabel('Steering angle [rad]')
-        plot(smooth_path(:,1), tri_wheels(:,2), DisplayName='Steering')
+        plot(smooth_path(:,1), tri_wheels(:,2), DisplayName='Direção (\alpha)')
+        ylabel('Ângulo de direção [rad]')
+        hold on
+
         grid on
         legend(Location='southoutside', Orientation='horizontal')
-        title('Tricycle')
+        title('Triciclo')
         xlabel('X [m]')
+        xlim(FIG_AXIS(1:2))
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/tri_wheels.pdf')
+        end
     end
 
     % Omnidirectional drive
@@ -309,17 +384,24 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     writematrix(omni_wheels, OMNI_FILE);
 
     if (DEBUG)
-        figure
-        plot(smooth_path(:,1), omni_wheels(:,1), DisplayName='Wheel 1') 
+        fig = figure;
+        fig.Position = FIG_POS;
+
+        plot(smooth_path(:,1), omni_wheels(:,1), DisplayName='Roda 1 (\omega_1)') 
         hold on
-        plot(smooth_path(:,1), omni_wheels(:,2), DisplayName='Wheel 2') 
+        plot(smooth_path(:,1), omni_wheels(:,2), DisplayName='Roda 2 (\omega_2)') 
         hold on
-        plot(smooth_path(:,1), omni_wheels(:,3), DisplayName='Wheel 3') 
+        plot(smooth_path(:,1), omni_wheels(:,3), DisplayName='Roda 3 (\omega_3)') 
         grid on
         legend(Location='southoutside', Orientation='horizontal')
-        title('Omnidirectional')
+        title('Omnidirecional')
         xlabel('X [m]')
-        ylabel('Rotation speed [rad/s]')
+        ylabel('Velocidade angular [rad/s]')
+        xlim(FIG_AXIS(1:2))
+
+        if (SAVE_FIGS)
+            exportgraphics(fig,'figs/omni_wheels.pdf')
+        end
     end
 
 end

@@ -141,6 +141,7 @@ if __name__ == '__main__':
         print(f'{f.__name__}:')        
         
         pprint(frw_k)
+        print(latex(frw_k))
 
         for sol in inv_ks:            
             for k in sol.keys():
