@@ -28,7 +28,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     TRI_FILE = 'TRI_76912.txt';
     OMNI_FILE = 'OMNI_76912.txt';
     DEBUG = false; % TODO set to false!
-    SAVE_FIGS = true;
+    SAVE_FIGS = false;
     FIG_AXIS = [-25 350 -10 160];
     FIG_POS = [500,300,660,420];
 
