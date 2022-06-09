@@ -27,7 +27,7 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
     DD_FILE = 'DD_76912.txt';
     TRI_FILE = 'TRI_76912.txt';
     OMNI_FILE = 'OMNI_76912.txt';
-    DEBUG = true; % TODO set to false!
+    DEBUG = false; % TODO set to false!
     SAVE_FIGS = true;
     FIG_AXIS = [-25 350 -10 160];
     FIG_POS = [500,300,660,420];
@@ -176,8 +176,6 @@ function rm1_76912(N, Dt, r, L, Vn, Wn, V)
 
     ekf_obs_pos = cell(size(control_inputs,1));
 
-    % TODO add try catch
-    % TODO add wrapToPi everywhere
     for n=1:1:size(control_inputs,1)
 
         control_t = control_inputs(n,:);
